@@ -140,7 +140,12 @@ function pr-train --argument pr_train_type pr_train_modifier
                                 echo -e (pr_train_table (echo $pr_train_pr_list_sorted) $pr_train_table_current_branch) > $tmp"table-"$pr_train_pr_number".txt"
                         end
                         # Write new body to tmp file
-                        string replace -r "<pr-train>.*</pr-train>" "(cat $tmp"table-"$pr_train_pr_number".txt")" "(cat $tmp"old-body-"$pr_train_pr_number".txt")" > $tmp"new-body-"$pr_train_pr_number".txt"
+                        if test (string match -r "<pr-train>.*</pr-train>" (cat $tmp"old-body-"$pr_train_pr_number".txt" | tr '\n' '\b'))
+                            string replace -r "<pr-train>.*</pr-train>" (cat $tmp"table-"$pr_train_pr_number".txt" | tr '\n' '\b') (cat $tmp"old-body-"$pr_train_pr_number".txt" | tr '\n' '\b') | tr '\b' '\n' > $tmp"new-body-"$pr_train_pr_number".txt"
+                        else
+                            cat $tmp"old-body-"$pr_train_pr_number".txt" > $tmp"new-body-"$pr_train_pr_number".txt"
+                            cat $tmp"table-"$pr_train_pr_number".txt" >> $tmp"new-body-"$pr_train_pr_number".txt"
+                        end
                         # Edit PR with new body 
                         gh pr edit $pr_train_pr_number -F $tmp"new-body-"$pr_train_pr_number".txt"
                     end
