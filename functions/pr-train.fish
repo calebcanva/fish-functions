@@ -129,7 +129,7 @@ function pr-train --argument pr_train_type pr_train_modifier
                     for i in (seq 0 (math (echo $pr_train_pr_list_sorted | jq '. | length') - 1))
                         set -l pr_train_table_current_branch (echo $pr_train_pr_list_sorted | jq -r .[$i].headRefName)
                         set -l pr_train_pr_number (echo $pr_train_pr_list_sorted | jq -r .[$i].number)
-                        echo $pr_train_pr_number
+                        echo "Updating PR: "$pr_train_pr_number
                         # Write old body to tmp file
                         echo -e (echo $pr_train_pr_list_sorted | jq -r .[$i].body) > $tmp"old-body-"$pr_train_pr_number".txt"
                         # Write pr-train table to tmp file

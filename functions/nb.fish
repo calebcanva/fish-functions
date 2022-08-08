@@ -2,7 +2,13 @@ function nb --description 'Create a fresh branch off green'
     begin
         git fetch origin green
         read -l -P 'Jira ticket: ' nb_jira_ticket
+        if test $status -gt 0
+            return $status
+        end
         read -l -P 'Branch name: ' nb_branch_name
+        if test $status -gt 0
+            return $status
+        end
         if test $nb_jira_ticket
             and test $nb_branch_name
             set nb_full_branch_name (slugify (whoami))-(slugify $nb_jira_ticket)-(slugify $nb_branch_name)
