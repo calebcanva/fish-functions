@@ -59,7 +59,7 @@ function pr-train --argument pr_train_type pr_train_modifier
                             echo (set_color red)"Conflicts during merge... Please resolve them and continue."
                             return $status
                         end
-                        echo (set_color grey)"Pushing..."
+                        echo (set_color grey)"Pushing..."(set_color normal)
                         git push
                     end
                 else
