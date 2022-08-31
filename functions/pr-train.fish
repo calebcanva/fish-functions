@@ -66,9 +66,9 @@ function pr-train --argument pr_train_type pr_train_modifier
                     echo (set_color grey)"No branches found for '$pr_train_branches'. Exiting..."
                 end
             case new-branch
-                set -l pr_train_current_branch (git branch --show-current)
                 switch $pr_train_modifier
                     case next
+                        set -l pr_train_current_branch (git branch --show-current)
                         set -l pr_train_next_branch (pr_train_next_branch_name $pr_train_current_branch)
                         echo "This will create a new branch "(set_color green)$pr_train_next_branch(set_color normal)" from branch "(set_color green)$pr_train_current_branch(set_color normal)
                         read -P (set_color red)"Press enter to continue ⏎"(set_color normal)
@@ -82,7 +82,7 @@ function pr-train --argument pr_train_type pr_train_modifier
                         if test $status -gt 0
                             return 0
                         end
-                        git checkout -b (pr_train_next_branch_name) $pr_train_current_branch
+                        git checkout -b (pr_train_next_branch_name) (pr_train_tail_branch_name)
                 end
             case checkout
                 switch $pr_train_modifier
