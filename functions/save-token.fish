@@ -1,3 +1,3 @@
-function save-token --description 'Save token' --argument token --argument name
-  echo $token > (string join "" "~/.tokens/" $name)
+function save-token --description 'Save token' --argument name --argument token
+  echo $token > ~/.tokens/$name
 end
