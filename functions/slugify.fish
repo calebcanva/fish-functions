@@ -1,3 +1,3 @@
 function slugify
-    string lower (string join '-' (string split ' ' (string trim $argv)))
+    string lower (string replace -r -- '--+' '-' (string join '-' (string split ' ' (string trim $argv))))
 end
