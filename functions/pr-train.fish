@@ -8,7 +8,6 @@ function __pr-train-next-branch --argument BRANCH
     echo $NEXT_BRANCH
 end
 
-
 function __pr-train-simple --argument PR_LIST_INFO CURRENT_BRANCH
     set -a STR "<pr-train>"
     set -a STR "\n"
