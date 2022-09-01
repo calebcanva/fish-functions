@@ -1,4 +1,4 @@
-function git_branches
+function git-branches
     git branch &> /dev/null
     if test $status -eq 0
         git branch --format "%(refname:short)"

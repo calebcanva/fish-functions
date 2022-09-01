@@ -1,19 +1,19 @@
 function clean-branches --description 'Cleans up old branches'
     begin
-        set -l branches (git branch -vv | grep ': gone]' | string match -r -a -g '\[origin\/(.*): gone\]')
-        if test (count $branches) -lt 1
+        set -l BRANCHES (git branch -vv | grep ': gone]' | string match -r -a -g '\[origin\/(.*): gone\]')
+        if test (count $BRANCHES) -lt 1
             echo (set_color grey)No branches found. Exiting...
             return
         end
-        
-        if test (count $branches) -gt 1
-            echo Found (count $branches) branches:
+
+        if test (count $BRANCHES) -gt 1
+            echo Found (count $BRANCHES) branches:
         else
-            echo Found (count $branches) branch: 
+            echo Found (count $BRANCHES) branch:
         end
         set_color yellow
-        for branch in $branches
-            echo $branch
+        for BRANCH in $BRANCHES
+            echo $BRANCH
         end
         set_color normal
 
@@ -21,9 +21,9 @@ function clean-branches --description 'Cleans up old branches'
         if test $status -gt 0
             return $status
         end
-        for branch in $branches
-            echo "Deleting branch "(set_color red)$branch(set_color normal)
-            git branch -D $branch
+        for BRANCH in $BRANCHES
+            echo "Deleting branch "(set_color red)$BRANCH(set_color normal)
+            git branch -D $BRANCH
         end
     end
 end

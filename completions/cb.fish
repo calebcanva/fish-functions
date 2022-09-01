@@ -1,1 +1,1 @@
-complete -f -c cb -n "not __fish_seen_subcommand_from (git_branches)" -a "(git_branches)"
+complete -f -c cb -n "not __fish_seen_subcommand_from (git-branches)" -a "(git-branches)"

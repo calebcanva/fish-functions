@@ -1,37 +1,37 @@
 function pr-cluster
     begin
-        read -l -P 'Jira ticket: ' jira_ticket
+        read -l -P 'Jira ticket: ' JIRA_TICKET
         if test $status -gt 0
             return $status
         end
         # Get new PR list again
-        set -l pr_jira_ticket (slugify $jira_ticket)
-        set -l pr_list_json_open (gh pr list --state open --author "@me" --search $pr_jira_ticket --json number --json title --json body --json url --json headRefName)
-        set -l pr_list_json_merged (gh pr list --state merged --author "@me" --search $pr_jira_ticket --json number --json title --json body --json url --json headRefName)
+        set -l JIRA_TICKET (slugify $JIRA_TICKET)
+        set -l PR_LIST_OPEN (gh pr list --state open --author "@me" --search $JIRA_TICKET --json number --json title --json body --json url --json headRefName)
+        set -l PR_LIST_CLOSED (gh pr list --state merged --author "@me" --search $JIRA_TICKET --json number --json title --json body --json url --json headRefName)
         # Join the two arrays since gh doesn't support multiple statuses in a single request
-        set -l pr_list_json (jq -n "$pr_list_json_open + $pr_list_json_merged")
-        set -l pr_list_sorted (echo $pr_list_json | jq 'sort_by(.headRefName) | .')
-        set -l tmp './.pr-cluster-tmp/'
-        mkdir $tmp
-        for i in (seq 0 (math (echo $pr_list_sorted | jq '. | length') - 1))
-            set -l pr_cluster_current_branch (echo $pr_list_sorted | jq -r .[$i].headRefName)
-            set -l pr_number (echo $pr_list_sorted | jq -r .[$i].number)
-            echo "Updating PR: "$pr_number
+        set -l PR_LIST_JSON (jq -n "$PR_LIST_OPEN + $PR_LIST_CLOSED")
+        set -l PR_LIST_SORTED (echo $PR_LIST_JSON | jq 'sort_by(.headRefName) | .')
+        set -l TMP './.pr-cluster-tmp/'
+        mkdir $TMP
+        for i in (seq 0 (math (echo $PR_LIST_SORTED | jq '. | length') - 1))
+            set -l CURRENT_BRANCH (echo $PR_LIST_SORTED | jq -r .[$i].headRefName)
+            set -l PR_NUMBER (echo $PR_LIST_SORTED | jq -r .[$i].number)
+            echo "Updating PR: "$PR_NUMBER
             # Write old body to tmp file
-            echo -e (echo $pr_list_sorted | jq -r .[$i].body) | tr '\r' '\n' > $tmp"old-body-"$pr_number".txt"
+            echo -e (echo $PR_LIST_SORTED | jq -r .[$i].body) | tr '\r' '\n' >$TMP"old-body-"$PR_NUMBER".txt"
             # Write pr-train table to tmp file
-            echo -e (pr_cluster_list (echo $pr_list_sorted) $pr_cluster_current_branch) > $tmp"cluster-"$pr_number".txt"
+            echo -e (pr-cluster-list (echo $PR_LIST_SORTED) $CURRENT_BRANCH) >$TMP"cluster-"$PR_NUMBER".txt"
             # Write new body to tmp file
-            if test (string match -r "<pr-cluster>.*</pr-cluster>" (cat $tmp"old-body-"$pr_number".txt" | tr '\n' '\b'))
-                string replace -r "<pr-cluster>.*</pr-cluster>" (cat $tmp"cluster-"$pr_number".txt" | tr '\n' '\b') (cat $tmp"old-body-"$pr_number".txt" | tr '\n' '\b') | tr '\b' '\n' > $tmp"new-body-"$pr_number".txt"
+            if test (string match -r "<pr-cluster>.*</pr-cluster>" (cat $TMP"old-body-"$PR_NUMBER".txt" | tr '\n' '\b'))
+                string replace -r "<pr-cluster>.*</pr-cluster>" (cat $TMP"cluster-"$PR_NUMBER".txt" | tr '\n' '\b') (cat $TMP"old-body-"$PR_NUMBER".txt" | tr '\n' '\b') | tr '\b' '\n' >$TMP"new-body-"$PR_NUMBER".txt"
             else
-                cat $tmp"old-body-"$pr_number".txt" > $tmp"new-body-"$pr_number".txt"
-                cat $tmp"cluster-"$pr_number".txt" >> $tmp"new-body-"$pr_number".txt"
+                cat $TMP"old-body-"$PR_NUMBER".txt" >$TMP"new-body-"$PR_NUMBER".txt"
+                cat $TMP"cluster-"$PR_NUMBER".txt" >>$TMP"new-body-"$PR_NUMBER".txt"
             end
             # Edit PR with new body 
-            gh pr edit $pr_number -F $tmp"new-body-"$pr_number".txt"
+            gh pr edit $PR_NUMBER -F $TMP"new-body-"$PR_NUMBER".txt"
         end
         # Clean up tmp files
-        rm -rf $tmp
+        rm -rf $TMP
     end
 end
