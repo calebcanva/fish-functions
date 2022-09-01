@@ -1,4 +1,4 @@
-function rename-branch --argument OLD_BRANCH --argument NEW_BRANCH
+function rb --argument OLD_BRANCH --argument NEW_BRANCH
     echo (set_color green)(string join (set_color normal)' > '(set_color green) $OLD_BRANCH $NEW_BRANCH)
     read -P (set_color red)"Press enter to continue ⏎"(set_color normal)
     if test $status -gt 0

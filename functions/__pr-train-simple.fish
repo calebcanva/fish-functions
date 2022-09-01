@@ -1,4 +1,4 @@
-function pr-train-simple --argument PR_LIST_INFO CURRENT_BRANCH
+function __pr-train-simple --argument PR_LIST_INFO CURRENT_BRANCH
     set -a STR "<pr-train>"
     set -a STR "\n"
     set -a STR "\n### PRs"

@@ -1,4 +1,4 @@
-function pr-cluster-list --argument PR_LIST CURRENT_BRANCH
+function __pr-cluster-list --argument PR_LIST CURRENT_BRANCH
     set -a STR "<pr-cluster>"
     set -a STR "\n"
     set -a STR "\n### Other PRs in this ticket:"

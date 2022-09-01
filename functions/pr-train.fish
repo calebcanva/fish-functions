@@ -101,7 +101,7 @@ function pr-train --argument TYPE --argument MODIFIER
                     echo (set_color grey)"No PR train exits at $CURRENT_BRANCH_DIR. Exiting..."(set_color normal)
                     return 0
                 end
-                set -l DEFAULT_BRANCH_NAME (pr-train-next-branch $CURRENT_BRANCH)
+                set -l DEFAULT_BRANCH_NAME (__pr-train-next-branch $CURRENT_BRANCH)
                 read -P "Enter a branch name "(set_color grey)"($DEFAULT_BRANCH_NAME)"(set_color normal)": "(set_color green) NEW_BRANCH_NAME
                 if test $status -gt 0
                     return 0
@@ -275,9 +275,9 @@ function pr-train --argument TYPE --argument MODIFIER
                         # Write pr-train table to tmp file
                         switch $MODIFIER
                             case simple
-                                echo -e (pr-train-simple (echo $PR_LIST_SORTED) $PR_TABLE_CURRENT_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
+                                echo -e (__pr-train-simple (echo $PR_LIST_SORTED) $PR_TABLE_CURRENT_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
                             case '*'
-                                echo -e (pr-train-table (echo $PR_LIST_SORTED) $PR_TABLE_CURRENT_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
+                                echo -e (__pr-train-table (echo $PR_LIST_SORTED) $PR_TABLE_CURRENT_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
                         end
                         # Write new body to tmp file
                         if test (string match -r "<pr-train>.*</pr-train>" (cat $TMP_DIR"old-body-"$PR_NUMBER".txt" | tr '\n' '\b'))

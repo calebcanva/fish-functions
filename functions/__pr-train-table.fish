@@ -1,4 +1,4 @@
-function pr-train-table --argument PR_LIST_JSON --argument CURRENT_BRANCH
+function __pr-train-table --argument PR_LIST_JSON --argument CURRENT_BRANCH
     set -a STR "<pr-train>"
     set -a STR "\n"
     set -a STR "\n### PR Train 🚂"
