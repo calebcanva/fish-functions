@@ -116,7 +116,7 @@ function pr-train --argument TYPE --argument MODIFIER
             case status
                 # Check for existing config
                 if not test -f $PR_TRAIN_BRANCHES_FILE
-                    echo (set_color grey)"No PR train exits at $CURRENT_BRANCH_DIR. Exiting..."(set_color normal)
+                    echo (set_color grey)"No PR train exits at $CURRENT_BRANCH_DIR."(set_color normal)
                     return 0
                 end
                 set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
