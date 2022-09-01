@@ -1,3 +1,56 @@
+function __pr-train-next-branch --argument BRANCH
+    set -l BRANCH_PARTS (string split - $BRANCH)
+    if test (string match -r "[0-9]+" $BRANCH_PARTS[-1])
+        set NEXT_BRANCH (string join - $BRANCH_PARTS[1..-2])"-"(math $BRANCH_PARTS[-1] + 1)
+    else
+        set NEXT_BRANCH (string join - $BRANCH_PARTS)"-1"
+    end
+    echo $NEXT_BRANCH
+end
+
+
+function __pr-train-simple --argument PR_LIST_INFO CURRENT_BRANCH
+    set -a STR "<pr-train>"
+    set -a STR "\n"
+    set -a STR "\n### PRs"
+    set -a STR "\n"
+    for i in (seq 0 (math (echo $PR_LIST_INFO | jq '. | length') - 1))
+        set -l PR_BRANCH (echo $PR_LIST_INFO | jq -r .[$i].headRefName)
+        set -l PR_NUMBER (echo $PR_LIST_INFO | jq -r .[$i].number)
+        if test (string match $CURRENT_BRANCH $PR_BRANCH)
+            set -a STR "\n"(printf -- "- #%s 👈" $PR_NUMBER)
+        else
+            set -a STR "\n"(printf -- "- #%s" $PR_NUMBER)
+        end
+    end
+    set -a STR "\n"
+    set -a STR "\n</pr-train>"
+    echo $STR
+end
+
+function __pr-train-table --argument PR_LIST_JSON --argument CURRENT_BRANCH
+    set -a STR "<pr-train>"
+    set -a STR "\n"
+    set -a STR "\n### PR Train 🚂"
+    set -a STR "\n"
+    set -a STR "\n| PR | Description |   |"
+    set -a STR "\n| -- | ------ | - |"
+    for i in (seq 0 (math (echo $PR_LIST_JSON | jq '. | length') - 1))
+        set -l BRANCH_NAME (echo $PR_LIST_JSON | jq -r .[$i].headRefName)
+        set -l PR_TITLE (string replace -r -i '\[[A-Z]+(-[0-9]*)*\]' '' (echo $PR_LIST_JSON | jq -r .[$i].title))
+        set -l PR_URL (echo $PR_LIST_JSON | jq -r .[$i].url)
+        set -l PR_NUMBER (echo $PR_LIST_JSON | jq -r .[$i].number)
+        if test (string match $CURRENT_BRANCH $BRANCH_NAME)
+            set -a STR "\n"(printf "| #%s | [%s](%s) | %s |" $PR_NUMBER $PR_TITLE $PR_URL "👈")
+        else
+            set -a STR "\n"(printf "| #%s | [%s](%s) |    |" $PR_NUMBER $PR_TITLE $PR_URL)
+        end
+    end
+    set -a STR "\n"
+    set -a STR "\n</pr-train>"
+    echo $STR
+end
+
 function pr-train --argument TYPE --argument MODIFIER
     # Check if repo exists
     if not test is-repo
