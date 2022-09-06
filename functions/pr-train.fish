@@ -318,7 +318,6 @@ function pr-train --argument TYPE --argument MODIFIER
                     mkdir $TMP_DIR
                     mkdir $PRS_INFO_DIR
                     for PR_BRANCH in $PR_TRAIN_BRANCHES
-                        echo "Finding PR info for "(set_color green)$PR_BRANCH(set_color normal)
                         set -l PR_INFO (gh pr view $PR_BRANCH --json number --json title --json body --json url --json headRefName)
                         echo $PR_INFO >$PRS_INFO_DIR(timestamp)"-"$PR_BRANCH".json"
                     end
@@ -328,7 +327,6 @@ function pr-train --argument TYPE --argument MODIFIER
                     for i in (seq 0 (math (echo $PR_LIST_SORTED | jq '. | length') - 1))
                         set -l PR_NUMBER (echo $PR_LIST_SORTED | jq -r .[$i].number)
                         set -l PR_BRANCH (echo $PR_LIST_SORTED | jq -r .[$i].headRefName)
-                        echo "Updating PR: "$PR_NUMBER
                         # Write old body to tmp file
                         echo -e (echo $PR_LIST_SORTED | jq -r .[$i].body) >$TMP_DIR"old-body-"$PR_NUMBER".txt"
                         # Write pr-train table to tmp file
