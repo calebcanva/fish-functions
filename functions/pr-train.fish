@@ -282,15 +282,16 @@ function pr-train --argument TYPE --argument MODIFIER
                     return 0
                 end
                 set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
+                set -l PR_TRAIN_BRANCHES_MERGE $PR_TRAIN_BRANCHES
                 if set -q PR_TRAIN_BRANCHES
                     # Set default base to master
-                    set -p PR_TRAIN_BRANCHES master
+                    set -p PR_TRAIN_BRANCHES_MERGE master
                     set -l NEW_PR_CREATED false
-                    for i in (seq (math (count $PR_TRAIN_BRANCHES) - 1))
+                    for i in (seq (math (count $PR_TRAIN_BRANCHES_MERGE) - 1))
                         # Set the current branch index to merge into
                         set -l j (math $i + 1)
-                        set -l BASE_BRANCH $PR_TRAIN_BRANCHES[$i]
-                        set -l BRANCH $PR_TRAIN_BRANCHES[$j]
+                        set -l BASE_BRANCH $PR_TRAIN_BRANCHES_MERGE[$i]
+                        set -l BRANCH $PR_TRAIN_BRANCHES_MERGE[$j]
                         # Check if a branch already exists
                         if test (echo (gh pr list --head $BRANCH --state open)) = ""
                             if test (echo (gh pr list --head $BRANCH --state merged)) = ""
@@ -299,6 +300,7 @@ function pr-train --argument TYPE --argument MODIFIER
                                 gh pr create --draft --title (string replace -a "-" " " $BRANCH) --body "<pr-train></pr-train>" --base $BASE_BRANCH --head $BRANCH
                             else
                                 echo (set_color grey)"PR already exists for $BRANCH"(set_color normal)
+                                gh pr edit $BRANCH --base $BASE_BRANCH --head $BRANCH
                             end
                         else
                             echo (set_color grey)"PR already exists for $BRANCH"(set_color normal)
@@ -311,25 +313,30 @@ function pr-train --argument TYPE --argument MODIFIER
                     end
                     # Get new PR list again
                     # TODO: Change to use number instead
-                    set -l PR_LIST_OPEN (gh pr list --state open --author "@me" --head $PR_TRAIN_BRANCHES[1] --json number --json title --json body --json url --json headRefName)
-                    set -l PR_LIST_MERGED (gh pr list --state merged --author "@me" --head $PR_TRAIN_BRANCHES[1] --json number --json title --json body --json url --json headRefName)
-                    # Join the two arrays since gh doesn't support multiple statuses in a single request
-                    set -l PR_LIST_JSON (jq -n "$PR_LIST_OPEN + $PR_LIST_MERGED")
-                    set -l PR_LIST_SORTED (echo $PR_LIST_JSON | jq 'sort_by(.headRefName) | .')
                     set -l TMP_DIR "$BASE_DIR/tmp/"
+                    set -l PRS_INFO_DIR "$BASE_DIR/tmp/prs/"
                     mkdir $TMP_DIR
+                    mkdir $PRS_INFO_DIR
+                    for PR_BRANCH in $PR_TRAIN_BRANCHES
+                        echo "Finding PR info for "(set_color green)$PR_BRANCH(set_color normal)
+                        set -l PR_INFO (gh pr view $PR_BRANCH --json number --json title --json body --json url --json headRefName)
+                        echo $PR_INFO >$PRS_INFO_DIR(timestamp)"-"$PR_BRANCH".json"
+                    end
+
+                    set -l PR_LIST_JSON (echo (jq -n '[inputs]' $PRS_INFO_DIR*.json))
+                    set -l PR_LIST_SORTED (echo $PR_LIST_JSON | jq 'sort_by(.number) | .')
                     for i in (seq 0 (math (echo $PR_LIST_SORTED | jq '. | length') - 1))
-                        set -l PR_TABLE_CURRENT_BRANCH (echo $PR_LIST_SORTED | jq -r .[$i].headRefName)
                         set -l PR_NUMBER (echo $PR_LIST_SORTED | jq -r .[$i].number)
+                        set -l PR_BRANCH (echo $PR_LIST_SORTED | jq -r .[$i].headRefName)
                         echo "Updating PR: "$PR_NUMBER
                         # Write old body to tmp file
                         echo -e (echo $PR_LIST_SORTED | jq -r .[$i].body) >$TMP_DIR"old-body-"$PR_NUMBER".txt"
                         # Write pr-train table to tmp file
                         switch $MODIFIER
                             case simple
-                                echo -e (__pr-train-simple (echo $PR_LIST_SORTED) $PR_TABLE_CURRENT_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
+                                echo -e (__pr-train-simple (echo $PR_LIST_SORTED) $PR_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
                             case '*'
-                                echo -e (__pr-train-table (echo $PR_LIST_SORTED) $PR_TABLE_CURRENT_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
+                                echo -e (__pr-train-table (echo $PR_LIST_SORTED) $PR_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
                         end
                         # Write new body to tmp file
                         if test (string match -r "<pr-train>.*</pr-train>" (cat $TMP_DIR"old-body-"$PR_NUMBER".txt" | tr '\n' '\b'))
