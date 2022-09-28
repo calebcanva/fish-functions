@@ -40,9 +40,9 @@ function __pr-train-table --argument PR_LIST_JSON --argument CURRENT_BRANCH
         set -l PR_URL (echo $PR_LIST_JSON | jq -r .[$i].url)
         set -l PR_NUMBER (echo $PR_LIST_JSON | jq -r .[$i].number)
         if test (string match $CURRENT_BRANCH $BRANCH_NAME)
-            set -a STR "\n"(printf "| #%s | [%s](%s) | %s |" $PR_NUMBER $PR_TITLE $PR_URL "👈")
+            set -a STR "\n"(printf -- "| #%s | [%s](%s) | %s |" $PR_NUMBER $PR_TITLE $PR_URL "👈")
         else
-            set -a STR "\n"(printf "| #%s | [%s](%s) |    |" $PR_NUMBER $PR_TITLE $PR_URL)
+            set -a STR "\n"(printf -- "| #%s | [%s](%s) |    |" $PR_NUMBER $PR_TITLE $PR_URL)
         end
     end
     set -a STR "\n"
