@@ -106,6 +106,13 @@ function pr-train --argument TYPE --argument MODIFIER
                     ln -s "$PR_TRAIN_BRANCHES_FILE" "$THIS_BRANCH_DIR/pr-train-branches"
                 end
                 play-sound train-whistle
+            case exists
+                # Check for existing config
+                if not test -f $PR_TRAIN_BRANCHES_FILE
+                    return 1
+                else 
+                    return 0
+                end
             case open-config
                 # Check for existing config
                 if not test -f $PR_TRAIN_BRANCHES_FILE
