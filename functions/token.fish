@@ -1,3 +1,3 @@
 function token --description 'Get token' --argument TOKEN
-    cat "~/.tokens/"$TOKEN
+    cat (string join "" ~/.tokens/ $TOKEN)
 end
