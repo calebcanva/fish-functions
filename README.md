@@ -6,9 +6,3 @@ Handy dandy fish (shell) functions
 ```
 $ fish install.fish
 ```
-
-## Dependencies
-
-```
-fisher install jorgebucaran/getopts
-```
