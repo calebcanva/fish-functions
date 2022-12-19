@@ -1,5 +1,6 @@
 function clean-branches --description 'Cleans up old branches'
-    begin
+    has-repo
+    and begin
         set -l BRANCHES (git branch -vv | grep ': gone]' | string match -r -a -g '\[origin\/(.*): gone\]')
         if test (count $BRANCHES) -lt 1
             echo (set_color grey)No branches found. Exiting...

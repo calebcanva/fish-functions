@@ -1,3 +1,3 @@
-function db --wraps='git branch -D' --description 'alias db git branch -D'
-  git branch -D $argv; 
+function db --description 'Delete branch' --argument BRANCH
+    git branch -D $BRANCH
 end
