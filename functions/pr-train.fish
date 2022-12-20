@@ -309,7 +309,7 @@ function pr-train --argument TYPE --argument MODIFIER
                                     gh pr create --draft --title (string replace -a "-" " " $BRANCH) --body "<pr-train></pr-train>" --base $BASE_BRANCH --head $BRANCH
                                 else
                                     echo (set_color grey)"PR already exists for $BRANCH"(set_color normal)
-                                    gh pr edit $BRANCH --base $BASE_BRANCH --head $BRANCH
+                                    gh pr edit $BRANCH --base $BASE_BRANCH
                                 end
                             else
                                 echo (set_color grey)"PR already exists for $BRANCH"(set_color normal)
