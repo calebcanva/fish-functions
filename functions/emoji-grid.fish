@@ -3,7 +3,6 @@ function emoji-grid --argument NAME --argument SIZE --description 'Makes a large
         set $SIZE 3x3
     end
     set -l DIMS (string split "x" $SIZE)
-    echo $DIMS
     set -l OUT (mktemp)
     set -l i 1
     for y in (seq 1 $DIMS[2])
