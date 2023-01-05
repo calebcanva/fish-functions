@@ -25,8 +25,8 @@ function pr-cluster
         end
         # Get new PR list again
         set -l JIRA_TICKET (slugify $JIRA_TICKET)
-        set -l PR_LIST_OPEN (gh pr list --state open --author "@me" --search $JIRA_TICKET --json number --json title --json body --json url --json headRefName)
-        set -l PR_LIST_CLOSED (gh pr list --state merged --author "@me" --search $JIRA_TICKET --json number --json title --json body --json url --json headRefName)
+        set -l PR_LIST_OPEN (gh pr list --state open --author "@me" --search $JIRA_TICKET --json number,title,body,url,headRefName)
+        set -l PR_LIST_CLOSED (gh pr list --state merged --author "@me" --search $JIRA_TICKET --json number,title,body,url,headRefName)
         # Join the two arrays since gh doesn't support multiple statuses in a single request
         set -l PR_LIST_JSON (jq -n "$PR_LIST_OPEN + $PR_LIST_CLOSED")
         set -l PR_LIST_SORTED (echo $PR_LIST_JSON | jq 'sort_by(.headRefName) | .')

@@ -164,6 +164,7 @@ function pr-train --argument TYPE --argument MODIFIER
                     for BRANCH in $PR_TRAIN_BRANCHES
                         rm -rf "$BASE_REPO_DIR/$BRANCH"
                     end
+                    play-sound done
                 end
             case new-branch
                 pr-train exists
@@ -195,6 +196,7 @@ function pr-train --argument TYPE --argument MODIFIER
                     # Add symlink to new branch dir
                     mkdir $NEW_BRANCH_DIR
                     ln -s "$PR_TRAIN_BRANCHES_FILE" "$NEW_BRANCH_DIR/pr-train-branches"
+                    play-sound create
                 end
             case checkout
                 pr-train exists
@@ -217,6 +219,7 @@ function pr-train --argument TYPE --argument MODIFIER
                                 echo (set_color red)"'"$MODIFIER"' is not a number. Exiting..."
                             end
                     end
+                    play-sound done
                 end
             case merge
                 pr-train exists
@@ -360,6 +363,7 @@ function pr-train --argument TYPE --argument MODIFIER
                         end
                         # Clean up tmp files
                         rm -rf $TMP_DIR
+                        play-sound done
                     else
                         echo (set_color grey)"No branches found for '$PR_TRAIN_BRANCHES'. Exiting..."
                     end
