@@ -327,12 +327,15 @@ function pr-train --argument TYPE --argument MODIFIER
                         mkdir $TMP_DIR
                         mkdir $PRS_INFO_DIR
                         for PR_BRANCH in $PR_TRAIN_BRANCHES
-                            set -l PR_INFO (gh pr view $PR_BRANCH --json number --json title --json body --json url --json headRefName)
-                            echo $PR_INFO >$PRS_INFO_DIR(timestamp)"-"$PR_BRANCH".json"
+                            set -l PR_INFO (gh pr view $PR_BRANCH --json number,title,body,url,headRefName)
+                            set -l FILENAME $PRS_INFO_DIR(timestamp)"-"$PR_BRANCH".json"
+                            echo $PR_INFO >$FILENAME
+                            # Set timestamp for sorting the list later
+                            jq '. += {"timestamp": "'(timestamp)'"}' $FILENAME
                         end
 
                         set -l PR_LIST_JSON (echo (jq -n '[inputs]' $PRS_INFO_DIR*.json))
-                        set -l PR_LIST_SORTED (echo $PR_LIST_JSON | jq 'sort_by(.number) | .')
+                        set -l PR_LIST_SORTED (echo $PR_LIST_JSON | jq 'sort_by(.timestamp) | .')
                         for i in (seq 0 (math (echo $PR_LIST_SORTED | jq '. | length') - 1))
                             set -l PR_NUMBER (echo $PR_LIST_SORTED | jq -r .[$i].number)
                             set -l PR_BRANCH (echo $PR_LIST_SORTED | jq -r .[$i].headRefName)
