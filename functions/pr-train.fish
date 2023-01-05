@@ -283,6 +283,10 @@ function pr-train --argument TYPE --argument MODIFIER
                             end
                             echo (set_color -i grey)"Pushing..."(set_color normal)
                             git push
+                            if test $status -gt 0
+                                echo (set_color red)"Error during push..."
+                                return $status
+                            end
                         end
                         echo (set_color -i grey)"Done 🚉"
                         play-sound train-whistle
