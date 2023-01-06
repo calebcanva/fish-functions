@@ -302,7 +302,6 @@ function pr-train --argument TYPE --argument MODIFIER
                     if set -q PR_TRAIN_BRANCHES
                         # Set default base to master
                         set -p PR_TRAIN_BRANCHES_MERGE master
-                        set -l CURRENT_BASE master
                         set -l NEW_PR_CREATED false
                         for i in (seq (math (count $PR_TRAIN_BRANCHES_MERGE) - 1))
                             # Set the current branch index to merge into
@@ -316,8 +315,7 @@ function pr-train --argument TYPE --argument MODIFIER
                                     # Do something?
                                 end
                                 if has-pr $BRANCH open
-                                    gh pr edit $BRANCH --base $CURRENT_BASE
-                                    set -l $CURRENT_BASE $BRANCH
+                                    gh pr edit $BRANCH --base $BASE_BRANCH
                                 end
                             else
                                 set NEW_PR_CREATED true
