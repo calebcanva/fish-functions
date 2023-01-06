@@ -107,7 +107,7 @@ function pr-train --argument TYPE --argument MODIFIER
             case exists
                 # Check for existing config
                 if not test -f $PR_TRAIN_BRANCHES_FILE
-                    echo (set_color grey)"No PR train exits for $(git-repo)@$CURRENT_BRANCH. Exiting..."
+                    echo (set_color grey)"No PR train exists for $(git-repo)@$CURRENT_BRANCH. Exiting..."
                     return 1
                 else
                     return 0
@@ -302,6 +302,7 @@ function pr-train --argument TYPE --argument MODIFIER
                     if set -q PR_TRAIN_BRANCHES
                         # Set default base to master
                         set -p PR_TRAIN_BRANCHES_MERGE master
+                        set -l CURRENT_BASE master
                         set -l NEW_PR_CREATED false
                         for i in (seq (math (count $PR_TRAIN_BRANCHES_MERGE) - 1))
                             # Set the current branch index to merge into
@@ -309,17 +310,19 @@ function pr-train --argument TYPE --argument MODIFIER
                             set -l BASE_BRANCH $PR_TRAIN_BRANCHES_MERGE[$i]
                             set -l BRANCH $PR_TRAIN_BRANCHES_MERGE[$j]
                             # Check if a branch already exists
-                            if test (echo (gh pr list --head $BRANCH --state open)) = ""
-                                if test (echo (gh pr list --head $BRANCH --state merged)) = ""
-                                    set NEW_PR_CREATED true
-                                    echo "Creating PR for "(set_color green)$BRANCH(set_color normal)" with base "(set_color green)$BASE_BRANCH(set_color normal)"..."
-                                    gh pr create --draft --title (string replace -a "-" " " $BRANCH) --body "<pr-train></pr-train>" --base $BASE_BRANCH --head $BRANCH
-                                else
-                                    echo (set_color grey)"PR already exists for $BRANCH"(set_color normal)
-                                    gh pr edit $BRANCH --base $BASE_BRANCH
+                            if has-pr $BRANCH merged,open
+                                echo (set_color grey)"PR already exists for $BRANCH"(set_color normal)
+                                if has-pr $BRANCH merged
+                                    # Do something?
+                                end
+                                if has-pr $BRANCH open
+                                    gh pr edit $BRANCH --base $CURRENT_BASE
+                                    set -l $CURRENT_BASE $BRANCH
                                 end
                             else
-                                echo (set_color grey)"PR already exists for $BRANCH"(set_color normal)
+                                set NEW_PR_CREATED true
+                                echo "Creating PR for "(set_color green)$BRANCH(set_color normal)" with base "(set_color green)$BASE_BRANCH(set_color normal)"..."
+                                gh pr create --draft --title (string replace -a "-" " " $BRANCH) --body "<pr-train></pr-train>" --base $BASE_BRANCH --head $BRANCH
                             end
                         end
                         echo (set_color grey)"Updating descriptions..."(set_color normal)
@@ -327,8 +330,6 @@ function pr-train --argument TYPE --argument MODIFIER
                             # Delay list fetch so that newly created PR's appear
                             sleep 3
                         end
-                        # Get new PR list again
-                        # TODO: Change to use number instead
                         set -l TMP_DIR "$BASE_DIR/tmp/"
                         set -l PRS_INFO_DIR "$BASE_DIR/tmp/prs/"
                         mkdir $TMP_DIR
@@ -337,23 +338,21 @@ function pr-train --argument TYPE --argument MODIFIER
                             set -l PR_INFO (gh pr view $PR_BRANCH --json number,title,body,url,headRefName)
                             set -l FILENAME $PRS_INFO_DIR(timestamp)"-"$PR_BRANCH".json"
                             echo $PR_INFO >$FILENAME
-                            # Set timestamp for sorting the list later
-                            jq '. += {"timestamp": "'(timestamp)'"}' $FILENAME
+                            sleep 1
                         end
 
                         set -l PR_LIST_JSON (echo (jq -n '[inputs]' $PRS_INFO_DIR*.json))
-                        set -l PR_LIST_SORTED (echo $PR_LIST_JSON | jq 'sort_by(.timestamp) | .')
-                        for i in (seq 0 (math (echo $PR_LIST_SORTED | jq '. | length') - 1))
-                            set -l PR_NUMBER (echo $PR_LIST_SORTED | jq -r .[$i].number)
-                            set -l PR_BRANCH (echo $PR_LIST_SORTED | jq -r .[$i].headRefName)
+                        for i in (seq 0 (math (echo $PR_LIST_JSON | jq '. | length') - 1))
+                            set -l PR_NUMBER (echo $PR_LIST_JSON | jq -r .[$i].number)
+                            set -l PR_BRANCH (echo $PR_LIST_JSON | jq -r .[$i].headRefName)
                             # Write old body to tmp file
-                            echo -e (echo $PR_LIST_SORTED | jq -r .[$i].body) >$TMP_DIR"old-body-"$PR_NUMBER".txt"
+                            echo -e (echo $PR_LIST_JSON | jq -r .[$i].body) >$TMP_DIR"old-body-"$PR_NUMBER".txt"
                             # Write pr-train table to tmp file
                             switch $MODIFIER
                                 case simple
-                                    echo -e (__pr-train-simple (echo $PR_LIST_SORTED) $PR_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
+                                    echo -e (__pr-train-simple (echo $PR_LIST_JSON) $PR_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
                                 case '*'
-                                    echo -e (__pr-train-table (echo $PR_LIST_SORTED) $PR_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
+                                    echo -e (__pr-train-table (echo $PR_LIST_JSON) $PR_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
                             end
                             # Write new body to tmp file
                             if test (string match -r "<pr-train>.*</pr-train>" (cat $TMP_DIR"old-body-"$PR_NUMBER".txt" | tr '\n' '\b'))
