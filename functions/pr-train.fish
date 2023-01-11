@@ -107,7 +107,10 @@ function pr-train --argument TYPE --argument MODIFIER
             case exists
                 # Check for existing config
                 if not test -f $PR_TRAIN_BRANCHES_FILE
-                    echo (set_color grey)"No PR train exists for $(git-repo)@$CURRENT_BRANCH. Exiting..."
+                    # Perform silent check
+                    if not test "$MODIFIER"
+                        echo (set_color grey)"No PR train exists for $(git-repo)@$CURRENT_BRANCH. Exiting..."
+                    end
                     return 1
                 else
                     return 0
