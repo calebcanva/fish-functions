@@ -4,6 +4,7 @@ function cb --description 'Checkout branch' --argument BRANCH
         echo "Already checked out "(set_color green)$BRANCH(set_color normal)"..."
         return 0
     end
+    git fetch origin $BRANCH
     echo "Checking out "(set_color green)$BRANCH(set_color normal)
     git checkout $BRANCH
 end

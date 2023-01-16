@@ -315,7 +315,8 @@ function pr-train --argument TYPE --argument MODIFIER
                                     # Do something?
                                 end
                                 if has-pr $BRANCH open
-                                    gh pr edit $BRANCH --base $BASE_BRANCH
+                                    # Do something?
+                                    # gh pr edit $BRANCH --base $BASE_BRANCH
                                 end
                             else
                                 set NEW_PR_CREATED true
