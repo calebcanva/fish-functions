@@ -172,7 +172,7 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                 for BRANCH in $PR_TRAIN_BRANCHES_REST
                     set -l THIS_BRANCH_DIR "$BASE_REPO_DIR/$BRANCH"
                     mkdir $THIS_BRANCH_DIR
-                    ln -s "$PR_TRAIN_BRANCHES_FILE" "$THIS_BRANCH_DIR/pr-train-branches"
+                    ln -s "$PR_TRAIN_BRANCHES_FILE" "$THIS_BRANCH_DIR/pr-train-branches.config"
                 end
                 play-sound train-whistle
             case open-config oc
@@ -249,7 +249,7 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                     echo $PR_TRAIN_BRANCHES $NEW_BRANCH_NAME >$PR_TRAIN_BRANCHES_FILE
                     # Add symlink to new branch dir
                     mkdir $NEW_BRANCH_DIR
-                    ln -s "$PR_TRAIN_BRANCHES_FILE" "$NEW_BRANCH_DIR/pr-train-branches"
+                    ln -s "$PR_TRAIN_BRANCHES_FILE" "$NEW_BRANCH_DIR/pr-train-branches.config"
                 end
             case checkout c
                 pr-train --exists
