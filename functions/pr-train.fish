@@ -49,9 +49,9 @@ function __pr-train-simple --argument PR_LIST_INFO CURRENT_BRANCH
         set -l PR_BRANCH (echo $PR_LIST_INFO | jq -r .[$i].headRefName)
         set -l PR_NUMBER (echo $PR_LIST_INFO | jq -r .[$i].number)
         if test (string match $CURRENT_BRANCH $PR_BRANCH)
-            set -a STR "\n"(printf -- "- #%s 👈" $PR_NUMBER)
+            set -a STR "\n"(printf "- #%s 👈" $PR_NUMBER)
         else
-            set -a STR "\n"(printf -- "- #%s" $PR_NUMBER)
+            set -a STR "\n"(printf "- #%s" $PR_NUMBER)
         end
     end
     set -a STR "\n"
@@ -72,9 +72,9 @@ function __pr-train-table --argument PR_LIST_JSON CURRENT_BRANCH
         set -l PR_URL (echo $PR_LIST_JSON | jq -r .[$i].url)
         set -l PR_NUMBER (echo $PR_LIST_JSON | jq -r .[$i].number)
         if test (string match $CURRENT_BRANCH $BRANCH_NAME)
-            set -a STR "\n"(printf -- "| #%s | [%s](%s) | %s |" $PR_NUMBER $PR_TITLE $PR_URL "👈")
+            set -a STR "\n"(printf "| #%s | [%s](%s) | %s |" $PR_NUMBER $PR_TITLE $PR_URL "👈")
         else
-            set -a STR "\n"(printf -- "| #%s | [%s](%s) |    |" $PR_NUMBER $PR_TITLE $PR_URL)
+            set -a STR "\n"(printf "| #%s | [%s](%s) |    |" $PR_NUMBER $PR_TITLE $PR_URL)
         end
     end
     set -a STR "\n"
