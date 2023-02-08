@@ -12,7 +12,7 @@ function __pr-train-help
     echo (set_color normal) '    Merges the carriages into each other from head to tail'
     echo (set_color grey) '      --from (optional) index to start at'
     echo (set_color grey) '      --to   (optional) index to end at'
-    echo (set_color grey -i) '      (or "here" to to merge to/from the current branch )'
+    echo (set_color grey -i) '      (or "here" to merge to/from the current branch )'
     echo
     echo (set_color normal --bold) '  pr-train checkout '(set_color -i)'n'(set_color normal --bold)':'
     echo (set_color normal) '    Checks out the nth branch in the train.'
