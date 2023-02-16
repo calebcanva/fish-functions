@@ -301,7 +301,7 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                         # Find the current index and merge from there
                         set PR_TRAIN_BRANCHES $PR_TRAIN_BRANCHES[(contains -i $CURRENT_BRANCH $PR_TRAIN_BRANCHES)..-1]
                         # Check if an existing merge is still in progress
-                        if test -f .git/MERGE_HEAD
+                        if test -f "$(git rev-parse --show-toplevel)/.git/MERGE_HEAD"
                             read -P (set_color yellow)"Merge in progress. Continue? ⏎"(set_color normal)
                             if test $status -gt 0
                                 return $status
