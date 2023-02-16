@@ -1,3 +1,35 @@
+#prettier-ignore
+function __pr-train-help
+    echo Pr train tool - made with (set_color red)❤(set_color normal) by Caleb
+    echo
+    echo (set_color normal --bold) '  pr-train init:'
+    echo (set_color normal) '    Initilises a new PR train'
+    echo
+    echo (set_color normal --bold) '  pr-train new-branch:'
+    echo (set_color normal) '    Creates a new carriage in the train off the tail'
+    echo
+    echo (set_color normal --bold) '  pr-train merge:'
+    echo (set_color normal) '    Merges the carriages into each other from head to tail'
+    echo (set_color grey) '      --from (optional) index to start at'
+    echo (set_color grey) '      --to   (optional) index to end at'
+    echo (set_color grey -i) '      (or "here" to merge to/from the current branch )'
+    echo
+    echo (set_color normal --bold) '  pr-train checkout '(set_color -i)'n'(set_color normal --bold)':'
+    echo (set_color normal) '    Checks out the nth branch in the train.'
+    echo (set_color normal) '    Other values for n include:'
+    echo (set_color grey -i) '      next/up     the next branch'
+    echo (set_color grey -i) '      prev/down   the previous branch'
+    echo (set_color grey -i) '      head        the head of the train'
+    echo (set_color grey -i) '      tail        the tail of the train'
+    echo
+    echo (set_color normal --bold) '  pr-train prs:'
+    echo (set_color normal) '    Updates/creates prs for all the branches in the current train'
+    echo (set_color grey) '      --simple (optional) simpler format compared to the default table'
+    echo
+    echo (set_color normal --bold) '  pr-train delete:'
+    echo (set_color normal) '    Deletes the current PR train'
+end
+
 function __pr-train-next-branch --argument BRANCH
     set -l BRANCH_PARTS (string split - $BRANCH)
     if test (string match -r "[0-9]+" $BRANCH_PARTS[-1])
@@ -17,9 +49,9 @@ function __pr-train-simple --argument PR_LIST_INFO CURRENT_BRANCH
         set -l PR_BRANCH (echo $PR_LIST_INFO | jq -r .[$i].headRefName)
         set -l PR_NUMBER (echo $PR_LIST_INFO | jq -r .[$i].number)
         if test (string match $CURRENT_BRANCH $PR_BRANCH)
-            set -a STR "\n"(printf -- "- #%s 👈" $PR_NUMBER)
+            set -a STR "\n"(printf "- #%s 👈" $PR_NUMBER)
         else
-            set -a STR "\n"(printf -- "- #%s" $PR_NUMBER)
+            set -a STR "\n"(printf "- #%s" $PR_NUMBER)
         end
     end
     set -a STR "\n"
@@ -40,9 +72,9 @@ function __pr-train-table --argument PR_LIST_JSON CURRENT_BRANCH
         set -l PR_URL (echo $PR_LIST_JSON | jq -r .[$i].url)
         set -l PR_NUMBER (echo $PR_LIST_JSON | jq -r .[$i].number)
         if test (string match $CURRENT_BRANCH $BRANCH_NAME)
-            set -a STR "\n"(printf -- "| #%s | [%s](%s) | %s |" $PR_NUMBER $PR_TITLE $PR_URL "👈")
+            set -a STR "\n"(printf "| #%s | [%s](%s) | %s |" $PR_NUMBER $PR_TITLE $PR_URL "👈")
         else
-            set -a STR "\n"(printf -- "| #%s | [%s](%s) |    |" $PR_NUMBER $PR_TITLE $PR_URL)
+            set -a STR "\n"(printf "| #%s | [%s](%s) |    |" $PR_NUMBER $PR_TITLE $PR_URL)
         end
     end
     set -a STR "\n"
@@ -50,7 +82,13 @@ function __pr-train-table --argument PR_LIST_JSON CURRENT_BRANCH
     echo $STR
 end
 
-function pr-train --argument TYPE --argument MODIFIER
+function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-train tool"
+    set -l OPTIONS h/help d/debug status e/exists ask-every-time prompt 'from=?' 'to=?' c/continue silent simple
+    argparse -n pr-train $OPTIONS -- $argv
+    if set -q _flag_help
+        __pr-train-help
+        return 0
+    end
     # Check if repo exists
     has-repo
     and begin
@@ -66,13 +104,46 @@ function pr-train --argument TYPE --argument MODIFIER
             echo (set_color -i grey)Creating directory: $BASE_REPO_DIR(set_color normal)
             mkdir -p $BASE_REPO_DIR
         end
+        # Setup configuration
+        set -l MAIN_BRANCH master
+        set -l MERGE_BRANCH origin/green
         set -l CURRENT_BRANCH (git branch --show-current)
         set -l CURRENT_BRANCH_DIR "$BASE_REPO_DIR/$CURRENT_BRANCH"
-        set -l PR_TRAIN_BRANCHES_FILE (readlink -f "$CURRENT_BRANCH_DIR/pr-train-branches")
+        set -l PR_TRAIN_BRANCHES_FILE (readlink -f "$CURRENT_BRANCH_DIR/pr-train-branches.config")
         # If no file or symlink is found, just set the path to the future file
         if test $status -gt 0
-            set PR_TRAIN_BRANCHES_FILE "$CURRENT_BRANCH_DIR/pr-train-branches"
+            set PR_TRAIN_BRANCHES_FILE "$CURRENT_BRANCH_DIR/pr-train-branches.config"
         end
+
+        if set -q _flag_exists
+            # Check for existing config
+            if not test -f $PR_TRAIN_BRANCHES_FILE
+                if not set -q _flag_silent
+                    echo (set_color grey)"No PR train exists for $(git-repo)@$CURRENT_BRANCH. Exiting..."
+                end
+                return 1
+            else
+                return 0
+            end
+        end
+
+        if set -q _flag_status
+            pr-train --exists
+            and begin
+                set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
+                # Count before prepending green branch
+                set -l BRANCH_COUNT (count $PR_TRAIN_BRANCHES)
+                set -l -p PR_TRAIN_BRANCHES $MERGE_BRANCH
+                if test $BRANCH_COUNT -eq 1
+                    echo "🚂 1 branch in train:"
+                else
+                    echo "🚂 $BRANCH_COUNT branches in train:"
+                end
+                echo (set_color green)(string join (set_color normal)" > "(set_color green) $PR_TRAIN_BRANCHES)
+            end
+            return 0
+        end
+
         switch $TYPE
             case init
                 # Check for existing config
@@ -86,7 +157,7 @@ function pr-train --argument TYPE --argument MODIFIER
                 printf $BRANCHES >$PR_TRAIN_BRANCHES_FILE
                 set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
                 set -l PR_TRAIN_BRANCHES_PRINT (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
-                set -l -p PR_TRAIN_BRANCHES_PRINT origin/green
+                set -l -p PR_TRAIN_BRANCHES_PRINT $MERGE_BRANCH
 
                 echo (set_color normal)"The following PR train will be created"
                 # Print out new PR train info
@@ -101,44 +172,19 @@ function pr-train --argument TYPE --argument MODIFIER
                 for BRANCH in $PR_TRAIN_BRANCHES_REST
                     set -l THIS_BRANCH_DIR "$BASE_REPO_DIR/$BRANCH"
                     mkdir $THIS_BRANCH_DIR
-                    ln -s "$PR_TRAIN_BRANCHES_FILE" "$THIS_BRANCH_DIR/pr-train-branches"
+                    ln -s "$PR_TRAIN_BRANCHES_FILE" "$THIS_BRANCH_DIR/pr-train-branches.config"
                 end
                 play-sound train-whistle
-            case exists
-                # Check for existing config
-                if not test -f $PR_TRAIN_BRANCHES_FILE
-                    # Perform silent check
-                    if not test "$MODIFIER"
-                        echo (set_color grey)"No PR train exists for $(git-repo)@$CURRENT_BRANCH. Exiting..."
-                    end
-                    return 1
-                else
-                    return 0
-                end
-            case open-config
-                pr-train exists
+            case open-config oc
+                pr-train --exists
                 and begin
                     open -- $PR_TRAIN_BRANCHES_FILE
                 end
-            case status
-                pr-train exists
+            case update u
+                pr-train --exists
                 and begin
-                    set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
-                    # Count before prepending green branch
-                    set -l BRANCH_COUNT (count $PR_TRAIN_BRANCHES)
-                    set -l -p PR_TRAIN_BRANCHES origin/green
-                    if test $BRANCH_COUNT -eq 1
-                        echo "🚂 1 branch in train:"
-                    else
-                        echo "🚂 $BRANCH_COUNT branches in train:"
-                    end
-                    echo (set_color green)(string join (set_color normal)" > "(set_color green) $PR_TRAIN_BRANCHES)
-                end
-            case update
-                pr-train exists
-                and begin
-                    echo (set_color grey)Fetching latest master(set_color normal)...
-                    git fetch origin master
+                    echo (set_color grey)Fetching latest $MAIN_BRANCH...(set_color normal)
+                    git fetch origin $MAIN_BRANCH
                     # Check if branches are merged
                     set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
                     set -l NEW_BRANCH_LIST
@@ -148,15 +194,21 @@ function pr-train --argument TYPE --argument MODIFIER
                             set -a NEW_BRANCH_LIST $BRANCH
                         end
                     end
+                    # Print out new PR train info
+                    echo (set_color green)(string join (set_color normal)" > "(set_color green) $NEW_BRANCH_LIST)
+                    read -P (set_color grey)"Are you sure you want to continue? ⏎"(set_color normal)
+                    if test $status -gt 0
+                        return $status
+                    end
                     echo $NEW_BRANCH_LIST >$PR_TRAIN_BRANCHES_FILE
                     echo (set_color -i grey)"Done 🚉"
                     play-sound train-whistle
                 end
-            case delete
-                pr-train exists
+            case delete d
+                pr-train --exists
                 and begin
                     set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
-                    set -l -p PR_TRAIN_BRANCHES origin/green
+                    set -l -p PR_TRAIN_BRANCHES $MERGE_BRANCH
                     echo (set_color normal)"The following PR train will be deleted"
                     echo (set_color green)(string join (set_color normal)" > "(set_color green) $PR_TRAIN_BRANCHES)
                     read -P (set_color grey)"Are you sure you want to continue? ⏎"(set_color normal)
@@ -168,8 +220,8 @@ function pr-train --argument TYPE --argument MODIFIER
                         rm -rf "$BASE_REPO_DIR/$BRANCH"
                     end
                 end
-            case new-branch
-                pr-train exists
+            case new-branch n
+                pr-train --exists
                 and begin
                     set -l DEFAULT_BRANCH_NAME (__pr-train-next-branch $CURRENT_BRANCH)
                     read -P "Enter a branch name "(set_color grey)"($DEFAULT_BRANCH_NAME)"(set_color normal)": "(set_color green) NEW_BRANCH_NAME
@@ -197,62 +249,111 @@ function pr-train --argument TYPE --argument MODIFIER
                     echo $PR_TRAIN_BRANCHES $NEW_BRANCH_NAME >$PR_TRAIN_BRANCHES_FILE
                     # Add symlink to new branch dir
                     mkdir $NEW_BRANCH_DIR
-                    ln -s "$PR_TRAIN_BRANCHES_FILE" "$NEW_BRANCH_DIR/pr-train-branches"
+                    ln -s "$PR_TRAIN_BRANCHES_FILE" "$NEW_BRANCH_DIR/pr-train-branches.config"
                 end
-            case checkout
-                pr-train exists
+            case checkout c
+                pr-train --exists
                 and begin
                     set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
-                    switch $MODIFIER
+                    # head tail start end prev next i/index
+                    if test "$CHECKOUT_INDEX" = ""
+                        echo (set_color red)"'index' not set. Exiting..."
+                    end
+                    switch $CHECKOUT_INDEX
                         case 0 head start
                             cb $PR_TRAIN_BRANCHES[1]
                         case -1 tail end
                             cb $PR_TRAIN_BRANCHES[-1]
+                        case prev down
+                            set -l INDEX (math (contains -i $CURRENT_BRANCH $PR_TRAIN_BRANCHES) - 1)
+                            if test $INDEX -lt 1
+                                echo (set_color grey)"Already at head. Exiting..."
+                                return 0
+                            end
+                            cb $PR_TRAIN_BRANCHES[$INDEX]
+                        case next up
+                            set -l INDEX (math (contains -i $CURRENT_BRANCH $PR_TRAIN_BRANCHES) + 1)
+                            if test $INDEX -gt (count $PR_TRAIN_BRANCHES)
+                                echo (set_color grey)"Already at tail. Exiting..."
+                                return 0
+                            end
+                            cb $PR_TRAIN_BRANCHES[$INDEX]
                         case '*'
-                            if test (string match -r "[0-9]+" $MODIFIER)
-                                set -l INDEX (math "$MODIFIER + 1")
+                            if test (string match -r "[0-9]+" $CHECKOUT_INDEX)
+                                set -l INDEX (math "$CHECKOUT_INDEX + 1")
                                 if test $INDEX -gt (count $PR_TRAIN_BRANCHES)
-                                    echo (set_color red)"'"$MODIFIER"' exceeds the number of branches. Did you mean '"(math (count $PR_TRAIN_BRANCHES) - 1)"'?"
+                                    echo (set_color red)"'"$CHECKOUT_INDEX"' exceeds the number of branches. Did you mean '"(math (count $PR_TRAIN_BRANCHES) - 1)"'?"
                                     return 1
                                 end
                                 cb $PR_TRAIN_BRANCHES[$INDEX]
                             else
-                                echo (set_color red)"'"$MODIFIER"' is not a number. Exiting..."
+                                echo (set_color red)"'"$CHECKOUT_INDEX"' is not a number. Exiting..."
                             end
                     end
                 end
-            case merge
-                pr-train exists
+            case merge m
+                pr-train --exists
                 and begin
                     set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
-                    set -p PR_TRAIN_BRANCHES origin/green
+                    set -p PR_TRAIN_BRANCHES $MERGE_BRANCH
                     # Check if we are continuing a pr-train merge
-                    if test "$MODIFIER"
-                        switch $MODIFIER
-                            case continue # Find the current index and merge from there
-                                set PR_TRAIN_BRANCHES $PR_TRAIN_BRANCHES[(contains -i (git branch --show-current) $PR_TRAIN_BRANCHES)..-1]
-                                # Check if an existing merge is still in progress
-                                if test -f .git/MERGE_HEAD
-                                    read -P (set_color yellow)"Merge in progress. Continue? ⏎"(set_color normal)
-                                    if test $status -gt 0
-                                        return $status
-                                    end
-                                    git merge --continue
-                                    if test $status -gt 0
-                                        return $status
-                                    end
-                                    git push
-                                end
-                            case head # Skip green
-                                set PR_TRAIN_BRANCHES $PR_TRAIN_BRANCHES[2..-1]
-                            case '*'
-                                if test (string match -r "[0-9]+" $MODIFIER)
-                                    set PR_TRAIN_BRANCHES $PR_TRAIN_BRANCHES[(math $MODIFIER + 1)..-1]
-                                else
-                                    echo (set_color red)"'"$MODIFIER"' is not a number. Exiting..."
-                                    return 1
-                                end
+                    if set -q _flag_continue
+                        # Find the current index and merge from there
+                        set PR_TRAIN_BRANCHES $PR_TRAIN_BRANCHES[(contains -i $CURRENT_BRANCH $PR_TRAIN_BRANCHES)..-1]
+                        # Check if an existing merge is still in progress
+                        if test -f "$(git rev-parse --show-toplevel)/.git/MERGE_HEAD"
+                            read -P (set_color yellow)"Merge in progress. Continue? ⏎"(set_color normal)
+                            if test $status -gt 0
+                                return $status
+                            end
+                            git merge --continue
+                            if test $status -gt 0
+                                return $status
+                            end
+                            git push
                         end
+                    else
+                        # Set default start indexes
+                        set -l START_INDEX 1
+                        set -l END_INDEX -1
+                        if set -q _flag_from
+                            if not test _flag_from
+                                echo (set_color red)"Invalid value passed to parameter '--from'. Exiting..."
+                                return 1
+                            end
+                            switch $_flag_from
+                                case head # Skip green
+                                    set START_INDEX 2
+                                case here # Current branch
+                                    set START_INDEX (contains -i $CURRENT_BRANCH $PR_TRAIN_BRANCHES)
+                                case '*'
+                                    if test (string match -r "[0-9]+" $_flag_from)
+                                        set START_INDEX (math $_flag_from + 1)
+                                    else
+                                        echo (set_color red)"'"$_flag_from"' is not a number. Exiting..."
+                                        return 1
+                                    end
+                            end
+                        end
+                        if set -q _flag_to
+                            if not test _flag_to
+                                echo (set_color red)"Invalid value passed to parameter '--to'. Exiting..."
+                                return 1
+                            end
+                            switch $_flag_to
+                                case tail # Skip green
+                                    set END_INDEX -1
+                                case '*'
+                                    if test (string match -r "[0-9]+" $_flag_to)
+                                        # This index is 2 ahead since we ahve green at the start and the array starts at 1
+                                        set END_INDEX (math $_flag_to + 2)
+                                    else
+                                        echo (set_color red)"'"$_flag_to"' is not a number. Exiting..."
+                                        return 1
+                                    end
+                            end
+                        end
+                        set PR_TRAIN_BRANCHES $PR_TRAIN_BRANCHES[$START_INDEX..$END_INDEX]
                     end
                     if test (count $PR_TRAIN_BRANCHES) -gt 1
                         echo "Going to merge "(count $PR_TRAIN_BRANCHES)" branches:"
@@ -269,6 +370,13 @@ function pr-train --argument TYPE --argument MODIFIER
                     if set -q PR_TRAIN_BRANCHES
                         # Create sequence from 1 to the length of branches, loop through
                         for i in (seq (math (count $PR_TRAIN_BRANCHES) - 1))
+                            if set -q _flag_ask_every_time
+                                echo "Going to checkout $PR_TRAIN_BRANCHES[$j]"
+                                read -P (set_color red)"Press enter to continue ⏎"(set_color normal)
+                                if test $status -gt 0
+                                    return $status
+                                end
+                            end
                             # Set the current branch index to merge into
                             set -l j (math $i + 1)
                             # Checkout the head branch
@@ -294,14 +402,14 @@ function pr-train --argument TYPE --argument MODIFIER
                         echo (set_color -i grey)"No branches found for '$PR_TRAIN_BRANCHES'. Exiting..."
                     end
                 end
-            case update-prs
-                pr-train exists
+            case update-prs prs
+                pr-train --exists
                 and begin
                     set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
                     set -l PR_TRAIN_BRANCHES_MERGE $PR_TRAIN_BRANCHES
                     if set -q PR_TRAIN_BRANCHES
-                        # Set default base to master
-                        set -p PR_TRAIN_BRANCHES_MERGE master
+                        # Set default base to main branch
+                        set -p PR_TRAIN_BRANCHES_MERGE $MAIN_BRANCH
                         set -l NEW_PR_CREATED false
                         for i in (seq (math (count $PR_TRAIN_BRANCHES_MERGE) - 1))
                             # Set the current branch index to merge into
@@ -347,11 +455,10 @@ function pr-train --argument TYPE --argument MODIFIER
                             # Write old body to tmp file
                             echo -e (echo $PR_LIST_JSON | jq -r .[$i].body) >$TMP_DIR"old-body-"$PR_NUMBER".txt"
                             # Write pr-train table to tmp file
-                            switch $MODIFIER
-                                case simple
-                                    echo -e (__pr-train-simple (echo $PR_LIST_JSON) $PR_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
-                                case '*'
-                                    echo -e (__pr-train-table (echo $PR_LIST_JSON) $PR_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
+                            if set -q _flag_simple
+                                echo -e (__pr-train-simple (echo $PR_LIST_JSON) $PR_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
+                            else
+                                echo -e (__pr-train-table (echo $PR_LIST_JSON) $PR_BRANCH) >$TMP_DIR"table-"$PR_NUMBER".txt"
                             end
                             # Write new body to tmp file
                             if test (string match -r "<pr-train>.*</pr-train>" (cat $TMP_DIR"old-body-"$PR_NUMBER".txt" | tr '\n' '\b'))
