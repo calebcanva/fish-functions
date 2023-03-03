@@ -2,7 +2,7 @@ cd (dirname (status --current-filename))
 for DIR in functions completions sounds
     echo (set_color normal)"Installing $DIR:"
     mkdir ~/.config/fish/$DIR 2>/dev/null
-    set -l FILES (ls $DIR | grep '.fish\|.txt\|.wav\|.mp3')
+    set -l FILES (ls $DIR | grep '.fish\|.wav\|.mp3')
     echo (set_color green)(string join (set_color normal)", "(set_color green) $FILES)(set_color normal)"."
     for FILE in $FILES
         ln -s (pwd)/$DIR/$FILE ~/.config/fish/$DIR/$FILE 2>/dev/null
