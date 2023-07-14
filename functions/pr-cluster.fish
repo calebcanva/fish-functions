@@ -7,9 +7,9 @@ function __pr-cluster-list --argument PR_LIST CURRENT_BRANCH
         set -l PR_BRANCH (echo $PR_LIST | jq -r .[$i].headRefName)
         set -l PR_NUMBER (echo $PR_LIST | jq -r .[$i].number)
         if test (string match $CURRENT_BRANCH $PR_BRANCH)
-            set -a STR "\n"(printf -- "- #%s 👈" $PR_NUMBER)
+            set -a STR "\n"(printf "- #%s 👈" $PR_NUMBER)
         else
-            set -a STR "\n"(printf -- "- #%s" $PR_NUMBER)
+            set -a STR "\n"(printf "- #%s" $PR_NUMBER)
         end
     end
     set -a STR "\n"
