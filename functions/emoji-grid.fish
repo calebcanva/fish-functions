@@ -16,5 +16,5 @@ function emoji-grid --argument NAME --argument SIZE --description 'Makes a large
     end
     cat $OUT | pbcopy
     echo (set_color -i grey)Copied to clipboard!
-    rm -rf $OUT`
+    rm -rf $OUT
 end
