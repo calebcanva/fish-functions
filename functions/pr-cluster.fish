@@ -1,7 +1,7 @@
 function __pr-cluster-list --argument PR_LIST CURRENT_BRANCH
     set -a STR "<pr-cluster>"
     set -a STR "\n"
-    set -a STR "\n### Other PRs in this ticket:"
+    set -a STR "\n### Related PR's:"
     set -a STR "\n"
     for i in (seq 0 (math (echo $PR_LIST | jq '. | length') - 1))
         set -l PR_BRANCH (echo $PR_LIST | jq -r .[$i].headRefName)
