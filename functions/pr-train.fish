@@ -26,6 +26,9 @@ function __pr-train-help
     echo (set_color normal) '    Updates/creates prs for all the branches in the current train'
     echo (set_color grey) '      --simple (optional) simpler format compared to the default table'
     echo
+    echo (set_color normal --bold) '  pr-train update:'
+    echo (set_color normal) '    Checks for merged branches and updates the PR train config'
+    echo
     echo (set_color normal --bold) '  pr-train delete:'
     echo (set_color normal) '    Deletes the current PR train'
 end
@@ -114,6 +117,11 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
         if test $status -gt 0
             set PR_TRAIN_BRANCHES_FILE "$CURRENT_BRANCH_DIR/pr-train-branches.config"
         end
+        set -l ALL_PR_TRAIN_BRANCHES_FILE (readlink -f "$CURRENT_BRANCH_DIR/all-pr-train-branches.config")
+        # If no file or symlink is found, just set the path to the future file
+        if test $status -gt 0
+            set ALL_PR_TRAIN_BRANCHES_FILE "$CURRENT_BRANCH_DIR/all-pr-train-branches.config"
+        end
 
         if set -q _flag_exists
             # Check for existing config
@@ -155,6 +163,7 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                 set -l BRANCHES (string join " " (git branch --contains $CURRENT_BRANCH --format "%(refname:short)"))
                 # Add head config
                 printf $BRANCHES >$PR_TRAIN_BRANCHES_FILE
+                printf $BRANCHES >$ALL_PR_TRAIN_BRANCHES_FILE
                 set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
                 set -l PR_TRAIN_BRANCHES_PRINT (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
                 set -l -p PR_TRAIN_BRANCHES_PRINT $MERGE_BRANCH
@@ -173,6 +182,7 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                     set -l THIS_BRANCH_DIR "$BASE_REPO_DIR/$BRANCH"
                     mkdir $THIS_BRANCH_DIR
                     ln -s "$PR_TRAIN_BRANCHES_FILE" "$THIS_BRANCH_DIR/pr-train-branches.config"
+                    ln -s "$ALL_PR_TRAIN_BRANCHES_FILE" "$THIS_BRANCH_DIR/all-pr-train-branches.config"
                 end
                 play-sound train-whistle
             case open-config oc
@@ -200,6 +210,7 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                     if test $status -gt 0
                         return $status
                     end
+                    # Don't update the Full list of branches to preserve all the history
                     echo $NEW_BRANCH_LIST >$PR_TRAIN_BRANCHES_FILE
                     echo (set_color -i grey)"Done 🚉"
                     play-sound train-whistle
@@ -247,9 +258,11 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                     # Write new branch to head file
                     set -l PR_TRAIN_BRANCHES (cat $PR_TRAIN_BRANCHES_FILE)
                     echo $PR_TRAIN_BRANCHES $NEW_BRANCH_NAME >$PR_TRAIN_BRANCHES_FILE
+                    echo $PR_TRAIN_BRANCHES $NEW_BRANCH_NAME >$ALL_PR_TRAIN_BRANCHES_FILE
                     # Add symlink to new branch dir
                     mkdir $NEW_BRANCH_DIR
                     ln -s "$PR_TRAIN_BRANCHES_FILE" "$NEW_BRANCH_DIR/pr-train-branches.config"
+                    ln -s "$ALL_PR_TRAIN_BRANCHES_FILE" "$NEW_BRANCH_DIR/all-pr-train-branches.config"
                 end
             case checkout c
                 pr-train --exists
@@ -296,6 +309,7 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                 and begin
                     set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
                     set -p PR_TRAIN_BRANCHES $MERGE_BRANCH
+                    git fetch origin $MERGE_BRANCH
                     # Check if we are continuing a pr-train merge
                     if set -q _flag_continue
                         # Find the current index and merge from there
@@ -405,7 +419,9 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
             case update-prs prs
                 pr-train --exists
                 and begin
+                    # Get list from all the branches in the history
                     set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
+                    set -l ALL_PR_TRAIN_BRANCHES (string split " " (cat $ALL_PR_TRAIN_BRANCHES_FILE))
                     set -l PR_TRAIN_BRANCHES_MERGE $PR_TRAIN_BRANCHES
                     if set -q PR_TRAIN_BRANCHES
                         # Set default base to main branch
@@ -424,7 +440,8 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                                 end
                                 if has-pr $BRANCH open
                                     # Do something?
-                                    # gh pr edit $BRANCH --base $BASE_BRANCH
+                                    # Ensure base branch is up to date
+                                    gh pr edit $BRANCH --base $BASE_BRANCH
                                 end
                             else
                                 set NEW_PR_CREATED true
@@ -441,7 +458,8 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                         set -l PRS_INFO_DIR "$BASE_DIR/tmp/prs/"
                         mkdir $TMP_DIR
                         mkdir $PRS_INFO_DIR
-                        for PR_BRANCH in $PR_TRAIN_BRANCHES
+                        # Loop through all the history of branches for the pr list
+                        for PR_BRANCH in $ALL_PR_TRAIN_BRANCHES
                             set -l PR_INFO (gh pr view $PR_BRANCH --json number,title,body,url,headRefName)
                             set -l FILENAME $PRS_INFO_DIR(timestamp)"-"$PR_BRANCH".json"
                             echo $PR_INFO >$FILENAME
@@ -467,7 +485,7 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                                 cat $TMP_DIR"old-body-"$PR_NUMBER".txt" >$TMP_DIR"new-body-"$PR_NUMBER".txt"
                                 cat $TMP_DIR"table-"$PR_NUMBER".txt" >>$TMP_DIR"new-body-"$PR_NUMBER".txt"
                             end
-                            # Edit PR with new body 
+                            # Edit PR with new body
                             gh pr edit $PR_NUMBER -F $TMP_DIR"new-body-"$PR_NUMBER".txt"
                         end
                         # Clean up tmp files
