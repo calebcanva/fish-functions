@@ -11,7 +11,7 @@ for DIR in functions completions sounds
     for FILE in $ALL_FILES
         set -l LINKED_FILE (readlink -f ~/.config/fish/$DIR/$FILE)
         # Remove symlinks that don't work any more
-        if not test -f $LINKED_FILE
+        if not test $LINKED_FILE
             rm -f ~/.config/fish/$DIR/$FILE
         end
     end
