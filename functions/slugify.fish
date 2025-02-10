@@ -1,3 +1,3 @@
 function slugify
-    string lower (string replace -r -- '--+' '-' (string replace -r -a "[^a-z0-9]" "-" (string replace -r -a "^[^a-z0-9]+|[^a-z0-9]+\$" "" $argv)))
+    echo $argv | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g' | sed -E 's/^-+|-+$//g'
 end
