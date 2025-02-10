@@ -14,7 +14,7 @@ function nb --description 'Create a fresh branch off green'
         end
         echo (set_color -i grey)Fetching green...(set_color normal)
         git fetch origin green
-        set FULL_BRANCH_NAME (slugify (whoami)"-$BRANCH_NAME")
+        set FULL_BRANCH_NAME (slugify "caleb-$BRANCH_NAME")
         echo Checking out new branch $FULL_BRANCH_NAME
         git checkout -b $FULL_BRANCH_NAME origin/green --no-track
     end
