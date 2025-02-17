@@ -184,7 +184,6 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                     ln -s "$PR_TRAIN_BRANCHES_FILE" "$THIS_BRANCH_DIR/pr-train-branches.config"
                     ln -s "$ALL_PR_TRAIN_BRANCHES_FILE" "$THIS_BRANCH_DIR/all-pr-train-branches.config"
                 end
-                play-sound train-whistle
             case open-config oc
                 pr-train --exists
                 and begin
@@ -213,7 +212,6 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                     # Don't update the Full list of branches to preserve all the history
                     echo $NEW_BRANCH_LIST >$PR_TRAIN_BRANCHES_FILE
                     echo (set_color -i grey)"Done 🚉"
-                    play-sound train-whistle
                 end
             case delete d
                 pr-train --exists
@@ -411,7 +409,6 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                             end
                         end
                         echo (set_color -i grey)"Done 🚉"
-                        play-sound train-whistle
                     else
                         echo (set_color -i grey)"No branches found for '$PR_TRAIN_BRANCHES'. Exiting..."
                     end
