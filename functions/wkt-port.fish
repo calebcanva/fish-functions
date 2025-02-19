@@ -22,5 +22,5 @@ function wkt-port
     case '*'
         set -l PORT 9090
     end
-    return $PORT
+    echo $PORT
 end
