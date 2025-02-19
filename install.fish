@@ -1,5 +1,5 @@
 cd (dirname (status --current-filename))
-for DIR in functions completions sounds
+for DIR in functions completions
     echo (set_color normal)"Installing $DIR:"
     mkdir ~/.config/fish/$DIR 2>/dev/null
     set -l FILES (ls $DIR | grep '.fish\|.wav\|.mp3')
