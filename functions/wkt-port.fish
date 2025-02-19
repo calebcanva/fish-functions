@@ -1,4 +1,4 @@
-function run-web
+function wkt-port
     set -l WORKTREE (git rev-parse --show-toplevel)
     set -l NUM (string match -r "[0-9]" (string split "-" $WORKTREE)[-1] != "")
     switch $NUM
