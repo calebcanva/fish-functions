@@ -249,9 +249,11 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                 pr-train --exists
                 and begin
                     set -l DEFAULT_BRANCH_NAME (__pr-train-next-branch $CURRENT_BRANCH)
-                    read -P "Enter a branch name "(set_color grey)"($DEFAULT_BRANCH_NAME)"(set_color normal)": "(set_color green) NEW_BRANCH_NAME
-                    if test $status -gt 0
-                        return 0
+                    if not set -q _flag_silent
+                        read -P "Enter a branch name "(set_color grey)"($DEFAULT_BRANCH_NAME)"(set_color normal)": "(set_color green) NEW_BRANCH_NAME
+                        if test $status -gt 0
+                            return 0
+                        end
                     end
                     set -l NEW_BRANCH_NAME (string trim (slugify "$NEW_BRANCH_NAME"))
                     # Check for empty input
