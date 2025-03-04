@@ -157,7 +157,7 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
         end
 
         switch $TYPE
-            case init
+            case init i
                 # Check for existing config
                 if test -f $PR_TRAIN_BRANCHES_FILE
                     if not set -q _flag_silent
