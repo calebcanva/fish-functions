@@ -86,7 +86,7 @@ function __pr-train-table --argument PR_LIST_JSON CURRENT_BRANCH
 end
 
 function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-train tool"
-    set -l OPTIONS h/help d/debug status e/exists ask-every-time prompt 'from=?' 'to=?' c/continue silent simple
+    set -l OPTIONS h/help d/debug status e/exists ask-every-time prompt 'from=?' 'to=?' c/continue s/silent simple
     argparse -n pr-train $OPTIONS -- $argv
     if set -q _flag_help
         __pr-train-help
