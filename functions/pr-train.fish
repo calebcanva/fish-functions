@@ -98,13 +98,17 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
         # Setup working vars
         set -l BASE_DIR "$HOME/.pr-train"
         if not test -d $BASE_DIR
-            echo (set_color -i grey)Creating directory: $BASE_DIR(set_color normal)
+            if not set -q _flag_silent
+                echo (set_color -i grey)Creating directory: $BASE_DIR(set_color normal)
+            end
             mkdir $BASE_DIR
         end
         set -l GIT_REPO (git-repo)
         set -l BASE_REPO_DIR "$BASE_DIR/$GIT_REPO"
         if not test -d $BASE_REPO_DIR
-            echo (set_color -i grey)Creating directory: $BASE_REPO_DIR(set_color normal)
+            if not set -q _flag_silent
+                echo (set_color -i grey)Creating directory: $BASE_REPO_DIR(set_color normal)
+            end
             mkdir -p $BASE_REPO_DIR
         end
         # Setup configuration
@@ -156,7 +160,9 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
             case init
                 # Check for existing config
                 if test -f $PR_TRAIN_BRANCHES_FILE
-                    echo (set_color grey)"PR train already exists at $CURRENT_BRANCH_DIR. Exiting..."(set_color normal)
+                    if not set -q _flag_silent
+                        echo (set_color grey)"PR train already exists at $CURRENT_BRANCH_DIR. Exiting..."(set_color normal)
+                    end
                     return 0
                 end
                 mkdir $CURRENT_BRANCH_DIR
@@ -168,12 +174,14 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                 set -l PR_TRAIN_BRANCHES_PRINT (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
                 set -l -p PR_TRAIN_BRANCHES_PRINT $MERGE_BRANCH
 
-                echo (set_color normal)"The following PR train will be created"
-                # Print out new PR train info
-                echo (set_color green)(string join (set_color normal)" > "(set_color green) $PR_TRAIN_BRANCHES_PRINT)
-                read -P (set_color grey)"Are you sure you want to continue? ⏎"(set_color normal)
-                if test $status -gt 0
-                    return $status
+                if not set -q _flag_silent
+                    echo (set_color normal)"The following PR train will be created"
+                    # Print out new PR train info
+                    echo (set_color green)(string join (set_color normal)" > "(set_color green) $PR_TRAIN_BRANCHES_PRINT)
+                    read -P (set_color grey)"Are you sure you want to continue? ⏎"(set_color normal)
+                    if test $status -gt 0
+                        return $status
+                    end
                 end
 
                 set -l PR_TRAIN_BRANCHES_REST $PR_TRAIN_BRANCHES[2..-1]
@@ -192,7 +200,9 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
             case update u
                 pr-train --exists
                 and begin
-                    echo (set_color grey)Fetching latest $MAIN_BRANCH...(set_color normal)
+                    if not set -q _flag_silent
+                        echo (set_color grey)Fetching latest $MAIN_BRANCH...(set_color normal)
+                    end
                     git fetch origin $MAIN_BRANCH
                     # Check if branches are merged
                     set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
@@ -204,25 +214,31 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                         end
                     end
                     # Print out new PR train info
-                    echo (set_color green)(string join (set_color normal)" > "(set_color green) $NEW_BRANCH_LIST)
-                    read -P (set_color grey)"Are you sure you want to continue? ⏎"(set_color normal)
-                    if test $status -gt 0
-                        return $status
+                    if not set -q _flag_silent
+                        echo (set_color green)(string join (set_color normal)" > "(set_color green) $NEW_BRANCH_LIST)
+                        read -P (set_color grey)"Are you sure you want to continue? ⏎"(set_color normal)
+                        if test $status -gt 0
+                            return $status
+                        end
                     end
                     # Don't update the Full list of branches to preserve all the history
                     echo $NEW_BRANCH_LIST >$PR_TRAIN_BRANCHES_FILE
-                    echo (set_color -i grey)"Done 🚉"
+                    if not set -q _flag_silent
+                        echo (set_color -i grey)"Done 🚉"
+                    end
                 end
             case delete d
                 pr-train --exists
                 and begin
                     set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
                     set -l -p PR_TRAIN_BRANCHES $MERGE_BRANCH
-                    echo (set_color normal)"The following PR train will be deleted"
-                    echo (set_color green)(string join (set_color normal)" > "(set_color green) $PR_TRAIN_BRANCHES)
-                    read -P (set_color grey)"Are you sure you want to continue? ⏎"(set_color normal)
-                    if test $status -gt 0
-                        return $status
+                    if not set -q _flag_silent
+                        echo (set_color normal)"The following PR train will be deleted"
+                        echo (set_color green)(string join (set_color normal)" > "(set_color green) $PR_TRAIN_BRANCHES)
+                        read -P (set_color grey)"Are you sure you want to continue? ⏎"(set_color normal)
+                        if test $status -gt 0
+                            return $status
+                        end
                     end
                     # Delete all branches pr-train config
                     for BRANCH in $PR_TRAIN_BRANCHES
@@ -242,10 +258,12 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                     if test -z $NEW_BRANCH_NAME
                         set NEW_BRANCH_NAME $DEFAULT_BRANCH_NAME
                     end
-                    echo ""(set_color normal)"This will create a new branch "(set_color green)"$NEW_BRANCH_NAME"(set_color normal)" from branch "(set_color green)$CURRENT_BRANCH(set_color normal)
-                    read -P (set_color -i grey)"Press enter to continue ⏎"(set_color normal)
-                    if test $status -gt 0
-                        return 0
+                    if not set -q _flag_silent
+                        echo ""(set_color normal)"This will create a new branch "(set_color green)"$NEW_BRANCH_NAME"(set_color normal)" from branch "(set_color green)$CURRENT_BRANCH(set_color normal)
+                        read -P (set_color -i grey)"Press enter to continue ⏎"(set_color normal)
+                        if test $status -gt 0
+                            return 0
+                        end
                     end
                     git checkout -b $NEW_BRANCH_NAME $CURRENT_BRANCH
                     if test $status -gt 0
@@ -268,7 +286,9 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                     set -l PR_TRAIN_BRANCHES (string split " " (cat $PR_TRAIN_BRANCHES_FILE))
                     # head tail start end prev next i/index
                     if test "$CHECKOUT_INDEX" = ""
-                        echo (set_color red)"'index' not set. Exiting..."
+                        if not set -q _flag_silent
+                            echo (set_color red)"'index' not set. Exiting..."
+                        end
                     end
                     switch $CHECKOUT_INDEX
                         case 0 head start
@@ -278,14 +298,18 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                         case prev down
                             set -l INDEX (math (contains -i $CURRENT_BRANCH $PR_TRAIN_BRANCHES) - 1)
                             if test $INDEX -lt 1
-                                echo (set_color grey)"Already at head. Exiting..."
+                                if not set -q _flag_silent
+                                    echo (set_color grey)"Already at head. Exiting..."
+                                end
                                 return 0
                             end
                             cb $PR_TRAIN_BRANCHES[$INDEX]
                         case next up
                             set -l INDEX (math (contains -i $CURRENT_BRANCH $PR_TRAIN_BRANCHES) + 1)
                             if test $INDEX -gt (count $PR_TRAIN_BRANCHES)
-                                echo (set_color grey)"Already at tail. Exiting..."
+                                if not set -q _flag_silent
+                                    echo (set_color grey)"Already at tail. Exiting..."
+                                end
                                 return 0
                             end
                             cb $PR_TRAIN_BRANCHES[$INDEX]
@@ -293,12 +317,16 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                             if test (string match -r "[0-9]+" $CHECKOUT_INDEX)
                                 set -l INDEX (math "$CHECKOUT_INDEX + 1")
                                 if test $INDEX -gt (count $PR_TRAIN_BRANCHES)
-                                    echo (set_color red)"'"$CHECKOUT_INDEX"' exceeds the number of branches. Did you mean '"(math (count $PR_TRAIN_BRANCHES) - 1)"'?"
+                                    if not set -q _flag_silent
+                                        echo (set_color red)"'"$CHECKOUT_INDEX"' exceeds the number of branches. Did you mean '"(math (count $PR_TRAIN_BRANCHES) - 1)"'?"
+                                    end
                                     return 1
                                 end
                                 cb $PR_TRAIN_BRANCHES[$INDEX]
                             else
-                                echo (set_color red)"'"$CHECKOUT_INDEX"' is not a number. Exiting..."
+                                if not set -q _flag_silent
+                                    echo (set_color red)"'"$CHECKOUT_INDEX"' is not a number. Exiting..."
+                                end
                             end
                     end
                 end
@@ -330,7 +358,9 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                         set -l END_INDEX -1
                         if set -q _flag_from
                             if not test _flag_from
-                                echo (set_color red)"Invalid value passed to parameter '--from'. Exiting..."
+                                if not set -q _flag_silent
+                                    echo (set_color red)"Invalid value passed to parameter '--from'. Exiting..."
+                                end
                                 return 1
                             end
                             switch $_flag_from
@@ -342,14 +372,18 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                                     if test (string match -r "[0-9]+" $_flag_from)
                                         set START_INDEX (math $_flag_from + 1)
                                     else
-                                        echo (set_color red)"'"$_flag_from"' is not a number. Exiting..."
+                                        if not set -q _flag_silent
+                                            echo (set_color red)"'"$_flag_from"' is not a number. Exiting..."
+                                        end
                                         return 1
                                     end
                             end
                         end
                         if set -q _flag_to
                             if not test _flag_to
-                                echo (set_color red)"Invalid value passed to parameter '--to'. Exiting..."
+                                if not set -q _flag_silent
+                                    echo (set_color red)"Invalid value passed to parameter '--to'. Exiting..."
+                                end
                                 return 1
                             end
                             switch $_flag_to
@@ -360,7 +394,9 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                                         # This index is 2 ahead since we ahve green at the start and the array starts at 1
                                         set END_INDEX (math $_flag_to + 2)
                                     else
-                                        echo (set_color red)"'"$_flag_to"' is not a number. Exiting..."
+                                        if not set -q _flag_silent
+                                            echo (set_color red)"'"$_flag_to"' is not a number. Exiting..."
+                                        end
                                         return 1
                                     end
                             end
@@ -368,12 +404,18 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                         set PR_TRAIN_BRANCHES $PR_TRAIN_BRANCHES[$START_INDEX..$END_INDEX]
                     end
                     if test (count $PR_TRAIN_BRANCHES) -gt 1
-                        echo "Going to merge "(count $PR_TRAIN_BRANCHES)" branches:"
+                        if not set -q _flag_silent
+                            echo "Going to merge "(count $PR_TRAIN_BRANCHES)" branches:"
+                        end
                     else
-                        echo (set_color grey)"Already at tail. Exiting..."
+                        if not set -q _flag_silent
+                            echo (set_color grey)"Already at tail. Exiting..."
+                        end
                         return 0
                     end
-                    echo (set_color green)(string join (set_color normal)' > '(set_color green) $PR_TRAIN_BRANCHES)
+                    if not set -q _flag_silent
+                        echo (set_color green)(string join (set_color normal)' > '(set_color green) $PR_TRAIN_BRANCHES)
+                    end
                     read -P (set_color red)"Press enter to continue ⏎"(set_color normal)
                     if test $status -gt 0
                         return $status
@@ -383,7 +425,9 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                         # Create sequence from 1 to the length of branches, loop through
                         for i in (seq (math (count $PR_TRAIN_BRANCHES) - 1))
                             if set -q _flag_ask_every_time
-                                echo "Going to checkout $PR_TRAIN_BRANCHES[$j]"
+                                if not set -q _flag_silent
+                                    echo "Going to checkout $PR_TRAIN_BRANCHES[$j]"
+                                end
                                 read -P (set_color red)"Press enter to continue ⏎"(set_color normal)
                                 if test $status -gt 0
                                     return $status
@@ -392,25 +436,39 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                             # Set the current branch index to merge into
                             set -l j (math $i + 1)
                             # Checkout the head branch
-                            echo "Checking out $PR_TRAIN_BRANCHES[$j]"
+                            if not set -q _flag_silent
+                                echo "Checking out $PR_TRAIN_BRANCHES[$j]"
+                            end
                             git checkout -q $PR_TRAIN_BRANCHES[$j]
                             # Merge the previous branch into current (default starts at green)
-                            echo "Merging $PR_TRAIN_BRANCHES[$i] into $PR_TRAIN_BRANCHES[$j]"
+                            if not set -q _flag_silent
+                                echo "Merging $PR_TRAIN_BRANCHES[$i] into $PR_TRAIN_BRANCHES[$j]"
+                            end
                             git merge -q --no-edit $PR_TRAIN_BRANCHES[$i]
                             if test $status -gt 0
-                                echo (set_color red)"Conflicts during merge... Please resolve them and continue."
+                                if not set -q _flag_silent
+                                    echo (set_color red)"Conflicts during merge... Please resolve them and continue."
+                                end
                                 return $status
                             end
-                            echo (set_color -i grey)"Pushing..."(set_color normal)
+                            if not set -q _flag_silent
+                                echo (set_color -i grey)"Pushing..."(set_color normal)
+                            end
                             git push
                             if test $status -gt 0
-                                echo (set_color red)"Error during push..."
+                                if not set -q _flag_silent
+                                    echo (set_color red)"Error during push..."
+                                end
                                 return $status
                             end
                         end
-                        echo (set_color -i grey)"Done 🚉"
+                        if not set -q _flag_silent
+                            echo (set_color -i grey)"Done 🚉"
+                        end
                     else
-                        echo (set_color -i grey)"No branches found for '$PR_TRAIN_BRANCHES'. Exiting..."
+                        if not set -q _flag_silent
+                            echo (set_color -i grey)"No branches found for '$PR_TRAIN_BRANCHES'. Exiting..."
+                        end
                     end
                 end
             case update-prs prs
@@ -431,7 +489,9 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                             set -l BRANCH $PR_TRAIN_BRANCHES_MERGE[$j]
                             # Check if a branch already exists
                             if has-pr $BRANCH merged,open
-                                echo (set_color grey)"PR already exists for $BRANCH"(set_color normal)
+                                if not set -q _flag_silent
+                                    echo (set_color grey)"PR already exists for $BRANCH"(set_color normal)
+                                end
                                 if has-pr $BRANCH merged
                                     # Do something?
                                 end
@@ -442,11 +502,15 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                                 end
                             else
                                 set NEW_PR_CREATED true
-                                echo "Creating PR for "(set_color green)$BRANCH(set_color normal)" with base "(set_color green)$BASE_BRANCH(set_color normal)"..."
+                                if not set -q _flag_silent
+                                    echo "Creating PR for "(set_color green)$BRANCH(set_color normal)" with base "(set_color green)$BASE_BRANCH(set_color normal)"..."
+                                end
                                 gh pr create --draft --title (string replace -a "-" " " $BRANCH) --body "<pr-train></pr-train>" --base $BASE_BRANCH --head $BRANCH
                             end
                         end
-                        echo (set_color grey)"Updating descriptions..."(set_color normal)
+                        if not set -q _flag_silent
+                            echo (set_color grey)"Updating descriptions..."(set_color normal)
+                        end
                         if test $NEW_PR_CREATED = true
                             # Delay list fetch so that newly created PR's appear
                             sleep 3
@@ -488,14 +552,20 @@ function pr-train --argument TYPE --argument CHECKOUT_INDEX --description "Pr-tr
                         # Clean up tmp files
                         rm -rf $TMP_DIR
                     else
-                        echo (set_color grey)"No branches found for '$PR_TRAIN_BRANCHES'. Exiting..."
+                        if not set -q _flag_silent
+                            echo (set_color -i grey)"No branches found for '$PR_TRAIN_BRANCHES'. Exiting..."
+                        end
                     end
                 end
             case '*'
                 if test -d $TYPE
-                    echo (set_color red)"Unknown option: "(set_color grey)"<empty>"
+                    if not set -q _flag_silent
+                        echo (set_color red)"Unknown option: "(set_color grey)"<empty>"
+                    end
                 else
-                    echo (set_color red)"Unknown option: $TYPE"
+                    if not set -q _flag_silent
+                        echo (set_color red)"Unknown option: $TYPE"
+                    end
                 end
         end
     end
