@@ -1,4 +1,4 @@
-function freshen --description 'Freshen the current branch from the latest green'
+function freshen --description 'Freshen the current branch from the latest master'
     if pr-train --exists --silent
         echo (set_color -i grey)Pr train detected...(set_color normal)
         git fetch origin master && pr-train merge
