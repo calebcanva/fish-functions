@@ -4,6 +4,6 @@ function freshen --description 'Freshen the current branch from the latest green
         git fetch origin master && pr-train merge
     else
         echo (set_color -i grey)Going to merge the latest green...(set_color normal)
-        git fetch origin master && git merge --no-edit origin/green && git push
+        git fetch origin master && git merge --no-edit origin/master && git push
     end
 end
