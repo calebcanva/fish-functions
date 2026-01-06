@@ -1,4 +1,4 @@
-function nb --description 'Create a fresh branch off green'
+function nb --description 'Create a fresh branch off master'
     begin
         set -l BRANCH_NAME
         if set -q argv[1]
@@ -13,9 +13,9 @@ function nb --description 'Create a fresh branch off green'
             return $status
         end
         echo (set_color -i grey)Fetching green...(set_color normal)
-        git fetch origin green
+        git fetch origin master
         set FULL_BRANCH_NAME (slugify "caleb-$BRANCH_NAME")
         echo Checking out new branch $FULL_BRANCH_NAME
-        git checkout -b $FULL_BRANCH_NAME origin/green --no-track
+        git checkout -b $FULL_BRANCH_NAME origin/master --no-track
     end
 end
