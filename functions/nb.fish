@@ -12,7 +12,7 @@ function nb --description 'Create a fresh branch off master'
             echo Some details missing. Exiting...
             return $status
         end
-        echo (set_color -i grey)Fetching green...(set_color normal)
+        echo (set_color -i grey)Fetching master...(set_color normal)
         git fetch origin master
         set FULL_BRANCH_NAME (slugify "caleb-$BRANCH_NAME")
         echo Checking out new branch $FULL_BRANCH_NAME
