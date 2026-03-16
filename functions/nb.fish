@@ -1,21 +1,22 @@
-function nb --description 'Create a fresh branch off master'
-    begin
-        set -l BRANCH_NAME
-        if set -q argv[1]
-            set BRANCH_NAME (string join " " $argv)
-        else
-            # For some reason I have to put it in another variable otherwise `read` won't override :sadge:
-            read -l -P 'Branch name: ' READ
-            set BRANCH_NAME $READ
-        end
-        if test $status -gt 0; or not test $BRANCH_NAME
-            echo Some details missing. Exiting...
-            return $status
-        end
-        echo (set_color -i grey)Fetching master...(set_color normal)
-        git fetch origin master
-        set FULL_BRANCH_NAME (slugify "caleb-$BRANCH_NAME")
-        echo Checking out new branch $FULL_BRANCH_NAME
-        git checkout -b $FULL_BRANCH_NAME origin/master --no-track
+function nb --description 'Create a fresh branch off default remote branch'
+    set -l BRANCH_NAME
+    if set -q argv[1]
+        set BRANCH_NAME (string join " " $argv)
+    else
+        read -l -P 'Branch name: ' BRANCH_NAME
     end
+    if not test -n "$BRANCH_NAME"
+        echo "Branch name missing. Exiting..."
+        return 1
+    end
+    # Detect remote default branch (e.g. origin/main)
+    set -l BASE_REF (git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)
+    if not test -n "$BASE_REF"
+        set BASE_REF origin/master
+    end
+    echo (set_color -i grey)"Fetching latest from origin..."(set_color normal)
+    git fetch origin --prune; or return $status
+    set -l FULL_BRANCH_NAME (slugify "caleb-$BRANCH_NAME")
+    echo "Checking out new branch $FULL_BRANCH_NAME from $BASE_REF"
+    git checkout --no-track -b "$FULL_BRANCH_NAME" "$BASE_REF"
 end
