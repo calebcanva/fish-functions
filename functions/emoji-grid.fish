@@ -1,6 +1,6 @@
 function emoji-grid --argument NAME --argument SIZE --description 'Makes a large emoji for use in slack'
-    if test -d $SIZE 
-        set $SIZE 3x3
+    if not test -n "$SIZE"
+        set SIZE 3x3
     end
     set -l DIMS (string split "x" $SIZE)
     set -l OUT (mktemp)
