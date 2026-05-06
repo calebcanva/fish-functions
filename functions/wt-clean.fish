@@ -27,8 +27,8 @@ function wt-clean --description "Remove worktrees for branches already merged in
             continue
         end
 
-        # Check if branch is merged into origin/green
-        set -l merge_base (git -C $canva_root merge-base origin/green $branch 2>/dev/null)
+        # Check if branch is merged into origin/master
+        set -l merge_base (git -C $canva_root merge-base origin/master $branch 2>/dev/null)
         set -l branch_tip (git -C $canva_root rev-parse $branch 2>/dev/null)
 
         if test "$merge_base" = "$branch_tip"

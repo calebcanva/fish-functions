@@ -35,11 +35,11 @@ function wt-new --description "Create a new Canva worktree and open a Claude Cod
     echo "→ Creating worktree at $worktree_path on branch $branch"
 
     # Fetch latest green
-    echo "→ Fetching origin/green..."
-    git -C $canva_root fetch origin green --quiet
+    echo "→ Fetching origin/master..."
+    git -C $canva_root fetch origin master --quiet
 
-    # Create the worktree from origin/green
-    git -C $canva_root worktree add -b $branch $worktree_path origin/green
+    # Create the worktree from origin/master
+    git -C $canva_root worktree add -b $branch $worktree_path origin/master
     if test $status -ne 0
         echo "Error: failed to create worktree"
         return 1
