@@ -1,3 +1,3 @@
 function claude
-    otter claude-code --add-dir ~/work/skynet $argv
+    ~/.local/bin/claude --add-dir ~/work/skynet $argv
 end

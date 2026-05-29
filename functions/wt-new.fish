@@ -51,5 +51,5 @@ function wt-new --description "Create a new Canva worktree and open a Claude Cod
 
     echo "→ Opening Claude Code session in $worktree_path"
     cd $worktree_path
-    otter claude-code --add-dir ~/work/skynet
+    ~/.local/bin/claude --add-dir ~/work/skynet
 end
