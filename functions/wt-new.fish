@@ -14,14 +14,11 @@ function wt-new --description "Create a new Canva worktree and open a Claude Cod
     end
 
     # Detect Jira ticket format (e.g. PWIT-1234, DETG-99)
-    if string match -qr '^[a-z]+-[0-9]+$' $input
-        if test -n "$slug"
-            set -l branch "caleb-$input-$slug"
-        else
-            set -l branch "caleb-$input"
-        end
-    else
-        set -l branch "caleb-$input"
+    # NOTE: assign without -l inside the blocks — `set -l` there is scoped to
+    # the if-block and would leave $branch empty out here.
+    set -l branch "caleb-$input"
+    if string match -qr '^[a-z]+-[0-9]+$' $input; and test -n "$slug"
+        set branch "caleb-$input-$slug"
     end
 
     set -l worktree_path "$HOME/work/canva-$branch"
