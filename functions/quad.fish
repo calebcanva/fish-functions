@@ -18,6 +18,13 @@ function quad --description "Attach to the quad tmux session; create its 2x2 clu
             tmux split-window -t $session: 'fish -C clud'
             tmux select-layout -t $session: tiled
         end
+        # Tint each quadrant: red, blue, green, yellow (top-left, top-right, bottom-left, bottom-right)
+        set -l tints '#3a2020' '#1f2a3f' '#1f3325' '#38321c'
+        set -l idx 1
+        for pane in (tmux list-panes -t $session: -F '#{pane_id}')
+            tmux select-pane -t $pane -P "bg=$tints[$idx]"
+            set idx (math $idx + 1)
+        end
         tmux select-pane -t $session:0.0
     end
 
