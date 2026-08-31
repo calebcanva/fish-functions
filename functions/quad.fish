@@ -12,10 +12,11 @@ function quad --description "Attach to the quad tmux session; create its 2x2 clu
     end
 
     if not tmux has-session -t $session 2>/dev/null
+        set -l colors red blue green yellow
         # Size the detached session explicitly so all four splits fit
-        tmux new-session -d -s $session -x 220 -y 50 'fish -C clud'
-        for i in (seq 3)
-            tmux split-window -t $session: 'fish -C clud'
+        tmux new-session -d -s $session -x 220 -y 50 "fish -C 'quad-clud $colors[1]'"
+        for i in 2 3 4
+            tmux split-window -t $session: "fish -C 'quad-clud $colors[$i]'"
             tmux select-layout -t $session: tiled
         end
         # Tint each quadrant: red, blue, green, yellow (top-left, top-right, bottom-left, bottom-right)
