@@ -20,9 +20,9 @@ function quad --description "Attach to the quad tmux session; create its 2x2 clu
             tmux select-layout -t $session: tiled
         end
         # Tint each quadrant: red, blue, green, yellow (top-left, top-right, bottom-left, bottom-right).
-        # Tints are the Claude Code dark-theme session colors (#dc2626 #6a9bcc #16a34a #ca8a04)
+        # Tints are the Claude Code session colors (#e8555a #7cb0db #00b256 #dfad00)
         # blended 18% onto #121212; keep in sync with clawd_body in ~/.claude/themes/quad-*.json.
-        set -l tints '#361616' '#222b33' '#132c1c' '#33280f'
+        set -l tints '#391e1f' '#252e36' '#0f2f1e' '#372e0f'
         set -l idx 1
         for pane in (tmux list-panes -t $session: -F '#{pane_id}')
             tmux select-pane -t $pane -P "bg=$tints[$idx]"
@@ -30,7 +30,7 @@ function quad --description "Attach to the quad tmux session; create its 2x2 clu
         end
         # Active pane border takes its quadrant's color (matched on the pane's
         # start command, which survives respawn and renumbering); white otherwise
-        tmux set -w -t $session: pane-active-border-style '#{?#{m:*quad-clud red*,#{pane_start_command}},fg=#dc2626,#{?#{m:*quad-clud blue*,#{pane_start_command}},fg=#6a9bcc,#{?#{m:*quad-clud green*,#{pane_start_command}},fg=#16a34a,#{?#{m:*quad-clud yellow*,#{pane_start_command}},fg=#ca8a04,fg=white}}}}'
+        tmux set -w -t $session: pane-active-border-style '#{?#{m:*quad-clud red*,#{pane_start_command}},fg=#e8555a,#{?#{m:*quad-clud blue*,#{pane_start_command}},fg=#7cb0db,#{?#{m:*quad-clud green*,#{pane_start_command}},fg=#00b256,#{?#{m:*quad-clud yellow*,#{pane_start_command}},fg=#dfad00,fg=white}}}}'
         tmux select-pane -t $session:0.0
     end
 
