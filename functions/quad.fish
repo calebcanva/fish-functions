@@ -28,7 +28,7 @@ function quad --description "Attach to the quad tmux session; create its 2x2 clu
         end
         # Active pane border takes its quadrant's color (matched on the pane's
         # start command, which survives respawn and renumbering); white otherwise
-        tmux set -w -t $session: pane-active-border-style '#{?#{m:*quad-clud red*,#{pane_start_command}},fg=red,#{?#{m:*quad-clud blue*,#{pane_start_command}},fg=blue,#{?#{m:*quad-clud green*,#{pane_start_command}},fg=green,#{?#{m:*quad-clud yellow*,#{pane_start_command}},fg=yellow,fg=white}}}}'
+        tmux set -w -t $session: pane-active-border-style '#{?#{m:*quad-clud red*,#{pane_start_command}},fg=red,#{?#{m:*quad-clud blue*,#{pane_start_command}},fg=#5f87d7,#{?#{m:*quad-clud green*,#{pane_start_command}},fg=green,#{?#{m:*quad-clud yellow*,#{pane_start_command}},fg=yellow,fg=white}}}}'
         tmux select-pane -t $session:0.0
     end
 
