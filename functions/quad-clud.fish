@@ -10,7 +10,6 @@ function quad-clud --description "Launch clud with a persistent per-color Claude
     # live session id to the pointer file, so the pointer follows /clear and resume.
     set -lx QUAD_COLOR $color
     # The quad-<color> themes (~/.claude/themes/) recolor Clawd via the undocumented clawd_body token.
-    # Session color is set manually with /color per window; /clear drops it anyway, so no startup command.
     set -l theme '{"theme":"custom:quad-'$color'"}'
     set -l pointer ~/.local/state/quad/$color
     if test -f $pointer
@@ -21,5 +20,7 @@ function quad-clud --description "Launch clud with a persistent per-color Claude
             return
         end
     end
-    clud --name $color --settings $theme
+    # A fresh session has no preloaded state, so set the session color at startup.
+    # A resumed session preloads its color from the transcript. /clear still drops it.
+    clud --name $color --settings $theme "/color $color"
 end
