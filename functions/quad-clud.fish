@@ -14,10 +14,13 @@ function quad-clud --description "Launch clud with a persistent per-color Claude
     set -l pointer ~/.local/state/quad/$color
     # clud runs claude from ~/work, so its sessions live under this project dir
     set -l projects ~/.claude/projects/-home-coder-work
+    # --model pins Fable on the CLI, which outranks both settings.json and the
+    # org default that otherwise overrides it at startup (see quad-session-track.sh).
+    set -l model_flag --model 'claude-fable-5-1[1m]'
     if test -f $pointer
         set -l id (string trim <$pointer)
         if test -n "$id" -a -f $projects/$id.jsonl
-            clud --resume $id --settings $theme
+            clud --resume $id --settings $theme $model_flag
             return
         end
     end
@@ -27,10 +30,10 @@ function quad-clud --description "Launch clud with a persistent per-color Claude
     # in tool output never match because their quotes are JSON-escaped.
     set -l fallback (grep -lsF '"agentName":"'$color'"' $projects/*.jsonl | xargs -r ls -1t | head -1)
     if test -n "$fallback"
-        clud --resume (basename $fallback .jsonl) --settings $theme
+        clud --resume (basename $fallback .jsonl) --settings $theme $model_flag
         return
     end
     # A fresh session has no preloaded state, so set the session color at startup.
     # A resumed session preloads its color from the transcript. /clear still drops it.
-    clud --name $color --settings $theme "/color $color"
+    clud --name $color --settings $theme $model_flag "/color $color"
 end
