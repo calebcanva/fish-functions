@@ -113,6 +113,18 @@ Print the dev server port for the current worktree, based on a trailing number i
 
 ---
 
+### PR Review
+
+#### `approve-all-prs [--dry-run]`
+Approve every open `Canva/canva` PR that requests your review, excluding drafts. Each approval is a bare `gh pr review --approve` with no body. `--dry-run` lists the PRs without approving. Returns non-zero if any approval fails.
+
+```
+approve-all-prs --dry-run
+approve-all-prs
+```
+
+---
+
 ### PR Train 🚂
 
 A PR train is a chain of stacked branches/PRs where each branch is based on the previous one. `pr-train` manages creating, merging, and keeping the PRs up to date.
