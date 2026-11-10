@@ -16,7 +16,7 @@ function quad-clud --description "Launch clud with a persistent per-color Claude
     set -l projects ~/.claude/projects/-home-coder-work
     # --model pins Fable on the CLI, which outranks both settings.json and the
     # org default that otherwise overrides it at startup (see quad-session-track.sh).
-    set -l model_flag --model 'claude-fable-5-1[1m]'
+    set -l model_flag --model 'claude-fable-5-2[1m]'
     if test -f $pointer
         set -l id (string trim <$pointer)
         if test -n "$id" -a -f $projects/$id.jsonl
